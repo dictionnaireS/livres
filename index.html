@@ -315,14 +315,18 @@
 
     <script>
         // Configuration du proxy Hugging Face
-        const HF_PROXY_URL = "https://gildasr-livres.hf.space/api/generate";
+        const HF_PROXY_URL = "https://VOTRE-SPACE.hf.space/api/generate";
         
         // Modèles OpenRouter à utiliser (dans l'ordre de priorité)
         const OPENROUTER_MODELS = [
-            "google/gemini-flash-1.5-8b",
+            "deepseek/deepseek-r1-0528:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "google/gemma-3-27b-it:free",
+            "openai/gpt-oss-120b:free",
+            "google/gemma-3-12b-it:free",
+            "mistralai/devstral-2512:free",
             "anthropic/claude-3-haiku",
-            "openai/gpt-4o-mini",
-            "meta-llama/llama-3.1-8b-instruct"
+            "google/gemini-flash-1.5"
         ];
       
         const SPIRITUAL_SYNONYMS = {
