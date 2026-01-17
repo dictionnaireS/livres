@@ -1,0 +1,109 @@
+{
+  "livres": [
+    {
+      "fichier_source": "Nous irons tous au paradis Le Jugement dernier en question (Marie Balmary, Daniel Marguerat).epub",
+      "fichier_json": "Nous irons tous au paradis Le Jugement dernier en question (Marie Balmary, Daniel Marguerat).json",
+      "titre": "Nous irons tous au paradis: Le Jugement dernier en question",
+      "auteur": "Marie Balmary",
+      "themes": [
+        "La remise en question du Jugement dernier dans le christianisme contemporain",
+        "L'évolution des représentations du Jugement dernier, du Moyen Âge à la théologie moderne",
+        "La tension entre un Dieu Juge et un Dieu Sauveur dans la Bible",
+        "La recherche d'une interprétation biblique du Jugement dernier, débarrassée des excès et des interprétations non scripturaires",
+        "Le dialogue entre théologie et psychanalyse pour aborder les angoisses liées au Jugement dernier"
+      ],
+      "mots_cles": [
+        "Jugement dernier",
+        "Christianisme",
+        "Dieu Juge",
+        "Dieu Sauveur",
+        "Amour divin",
+        "Terreur",
+        "Moyen Âge",
+        "Représentations",
+        "Bible",
+        "Nouveau Testament",
+        "Ancien Testament",
+        "Luther",
+        "Apocalyptique",
+        "Rétribution",
+        "Justice",
+        "Vérité",
+        "Salut",
+        "Enfer",
+        "Paradis",
+        "Psychanalyse"
+      ]
+    },
+    {
+      "fichier_source": "Traité de la concupiscence (Jacques Bénigne Bossuet) (Z-Library).epub",
+      "fichier_json": "Traité de la concupiscence (Jacques Bénigne Bossuet) (Z-Library).json",
+      "titre": "Traité de la concupiscence",
+      "auteur": "Jacques Bénigne Bossuet",
+      "themes": [
+        "La nature et les dangers de la concupiscence (de la chair, des yeux, de la vie)",
+        "La distinction entre le monde et la vie chrétienne, et le rejet du premier",
+        "L'influence du corps mortel et de ses passions sur l'âme humaine",
+        "La nécessité de combattre les désirs charnels et les plaisirs sensuels",
+        "La critique des attachements terrestres et périssables au profit des réalités spirituelles et éternelles"
+      ],
+      "mots_cles": [
+        "Concupiscence",
+        "Monde",
+        "Chair",
+        "Yeux",
+        "Vie",
+        "Père",
+        "Jésus-Christ",
+        "Apôtre",
+        "Saint Jean",
+        "Saint Augustin",
+        "Pascal",
+        "La Bruyère",
+        "La Rochefoucauld",
+        "Corps",
+        "Âme",
+        "Plaisirs",
+        "Sens",
+        "Péché",
+        "Servitude",
+        "Volonté de Dieu"
+      ]
+    },
+    {
+      "fichier_source": "Lamitié véritable (Aelred de Rievaulx).epub",
+      "fichier_json": "Lamitié véritable (Aelred de Rievaulx).json",
+      "titre": "L'amitié véritable",
+      "auteur": "Aelred de Rievaulx",
+      "themes": [
+        "La nature et la définition de l'amitié véritable, distinguée des fausses amitiés.",
+        "La place centrale du Christ dans l'amitié véritable (christocentrisme).",
+        "L'origine et le fondement de l'amitié : nature, expérience, loi et foi.",
+        "La distinction entre amitié, charité et autres formes d'affection.",
+        "Les fruits et les avantages de l'amitié véritable, sa dimension éternelle."
+      ],
+      "mots_cles": [
+        "amitié",
+        "véritable",
+        "Christ",
+        "Dieu",
+        "amour",
+        "charité",
+        "fidélité",
+        "don",
+        "relation",
+        "cœur",
+        "souffrance",
+        "joie",
+        "éternité",
+        "nature",
+        "expérience",
+        "loi",
+        "foi",
+        "sagesse",
+        "moine",
+        "spirituelle"
+      ]
+    }
+  ]
+}
