@@ -328,15 +328,98 @@
         ];
       
         const SPIRITUAL_SYNONYMS = {
-            "priere": ["oraison", "meditation", "contemplation"],
-            "oraison": ["priere", "meditation", "contemplation"],
-            "meditation": ["oraison", "contemplation", "reflexion"],
-            "contemplation": ["oraison", "meditation", "vision"],
-            "ame": ["esprit", "coeur", "interieur"],
-            "dieu": ["seigneur", "christ", "pere"],
-            "grace": ["don", "faveur", "misericorde"],
-            "union": ["communion", "unite", "fusion"]
-        };
+    // --- FAMILLE : DIEU ET TRINITÉ ---
+    "dieu": ["seigneur", "pere", "createur", "eternel", "absolu", "divinite", "trinite", "tout-puissant", "providence", "logos", "verbe", "allah", "tawhid"],
+    "seigneur": ["dieu", "christ", "pere", "maitre", "eternel"],
+    "pere": ["dieu", "createur", "abbaseigneur", "engendreur"],
+    "christ": ["jesus", "verbe", "logos", "messie", "sauveur", "redempteur", "oint", "emmanuel", "agneau"],
+    "jesus": ["christ", "sauveur", "emmanuel", "fils de dieu"],
+    "esprit": ["paraclet", "souffle", "pneuma", "consolateur", "sanctificateur", "ame", "esprit-saint"],
+    "esprit-saint": ["esprit", "paraclet", "souffle", "pneuma", "don de dieu"],
+    "verbe": ["logos", "parole", "christ", "fils"],
+    "logos": ["verbe", "parole", "raison", "christ"],
+    "trinite": ["tri-unite", "pere-fils-esprit", "communion divine"],
+    "divinite": ["dieu", "deite", "essence divine"],
+
+    // --- FAMILLE : PRIÈRE ET MYSTIQUE ---
+    "priere": ["oraison", "meditation", "contemplation", "intercession", "louange", "adoration", "supplication", "invocation", "dhikr", "psaume", "office"],
+    "oraison": ["priere", "meditation", "contemplation", "coeur-a-coeur", "silence"],
+    "meditation": ["oraison", "contemplation", "reflexion", "ruminations", "lectio-divina"],
+    "contemplation": ["oraison", "meditation", "vision", "theoria", "regard", "extase", "ravissement"],
+    "adoration": ["louange", "culte", "latrie", "prosternation", "veneration"],
+    "louange": ["adoration", "action de grace", "doxologie", "hymne", "benediction"],
+    "extase": ["ravissement", "union", "sortie de soi", "levitation", "transport"],
+    "silence": ["quietude", "desert", "hesychasme", "paix", "recueillement"],
+    "hesychasme": ["silence", "paix-interieure", "priere-du-coeur"],
+    "dhikr": ["invocation", "souvenir", "priere", "soufisme"],
+
+    // --- FAMILLE : L'ÂME ET L'INTÉRIORITÉ ---
+    "ame": ["esprit", "coeur", "interieur", "psyché", "pneuma", "etincelle", "fond-de-l-ame"],
+    "coeur": ["ame", "centre", "interieur", "fond", "volonte", "affectivite", "qalb"],
+    "interieur": ["ame", "intimite", "vie-interieure", "secret", "dedans"],
+    "conscience": ["ame", "interieur", "jugement", "synderese"],
+
+    // --- FAMILLE : GRÂCE ET SALUT ---
+    "grace": ["don", "faveur", "misericorde", "secours", "benediction", "charisme", "gratuité"],
+    "don": ["grace", "faveur", "offrande", "charisme"],
+    "misericorde": ["pitie", "pardon", "clemence", "compassion", "charite", "rahma"],
+    "pardon": ["misericorde", "absolution", "remission", "reconciliation"],
+    "salut": ["redemption", "delivrance", "liberation", "justification", "vie-eternelle"],
+    "redemption": ["salut", "rachat", "sacrifice", "expiation"],
+    "providence": ["dieu", "gouvernement-divin", "volonte-de-dieu", "soin-divin"],
+
+    // --- FAMILLE : UNION ET AMOUR ---
+    "union": ["communion", "unite", "fusion", "mariage-mystique", "fana", "deification", "theose", "participation"],
+    "communion": ["union", "partage", "eucharistie", "unite", "corps-mystique"],
+    "unite": ["union", "communion", "unicite", "tawhid"],
+    "charite": ["amour", "agape", "dilection", "don-de-soi", "misericorde"],
+    "amour": ["charite", "agape", "affection", "feu", "ardeur", "unite", "eros"],
+    "agape": ["amour", "charite", "banquet", "repas-du-seigneur"],
+
+    // --- FAMILLE : VERTUS ET ASCÈSE ---
+    "vertu": ["foi", "esperance", "charite", "justice", "prudence", "force", "temperance", "perfection"],
+    "foi": ["croyance", "adhesion", "confiance", "fidelite", "dogme"],
+    "esperance": ["attente", "confiance", "desir", "espoir"],
+    "humilite": ["abaissement", "kenose", "pauvrete", "effacement", "petit-chemin"],
+    "kenose": ["humilite", "abaissement", "depouillement", "incarnation"],
+    "ascese": ["renoncement", "depouillement", "mortification", "penitence", "combat-spirituel", "effort", "jihad"],
+    "pauvrete": ["depouillement", "detachement", "humilite", "indigence"],
+    "obéissance": ["soumission", "docilite", "abandon", "ecoute", "islam"],
+    "abandon": ["confiance", "lacher-prise", "quietude", "remise-de-soi"],
+
+    // --- FAMILLE : ÉCRITURE ET ENSEIGNEMENT ---
+    "ecriture": ["bible", "parole", "evangile", "testament", "revelation", "livre", "coran"],
+    "bible": ["ecriture", "parole-de-dieu", "saintes-lettres", "livre-sacre"],
+    "evangile": ["bonne-nouvelle", "parole", "christ"],
+    "exegese": ["hermeneutique", "interpretation", "commentaire", "sens-spirituel", "tafsir"],
+    "parole": ["verbe", "logos", "ecriture", "revelation"],
+    "revelation": ["apocalypse", "manifestation", "theophanie", "epiphanie", "parole"],
+
+    // --- FAMILLE : LITURGIE ET RITES ---
+    "liturgie": ["office", "culte", "messe", "sacrement", "rituel", "celebration"],
+    "messe": ["eucharistie", "liturgie", "sacrifice", "repas", "cene"],
+    "eucharistie": ["messe", "communion", "viatique", "pain-de-vie", "hostie"],
+    "sacrement": ["signe", "mystere", "rite", "grace"],
+    "office": ["liturgie", "breviaire", "psautier", "louange"],
+
+    // --- FAMILLE : ESCHATOLOGIE (FINS DERNIÈRES) ---
+    "ciel": ["paradis", "royaume", "bienheureux", "cite-de-dieu", "eternite"],
+    "paradis": ["ciel", "eden", "beautitude", "demeure-eternelle"],
+    "mort": ["trepas", "passage", "fin", "agonie", "sommeil"],
+    "resurrection": ["vie-nouvelle", "reveil", "parousie", "immortalite"],
+    "enfer": ["gehenne", "tenebres", "damnation", "abime", "neant"],
+    "purgatoire": ["purification", "feu-purificateur", "attente"],
+    "jugement": ["sentence", "parousie", "justice-divine"],
+
+    // --- FAMILLE : PHILOSOPHIE ET LUMIÈRE ---
+    "sagesse": ["sapience", "sophia", "connaissance", "philosophie", "gnose"],
+    "connaissance": ["sagesse", "gnose", "intelligence", "vision", "lumiere", "ma-rifa"],
+    "lumiere": ["illumination", "clarte", "splendeur", "rayon", "gloire", "epiphanie"],
+    "illumination": ["lumiere", "grace", "gnose", "vision"],
+    "verite": ["absolu", "certitude", "dogme", "al-haqq"],
+    "neant": ["vide", "rien", "obscurite", "apophasme", "nuit-obscure"],
+    "apophasme": ["theologie-negative", "neant", "inconnaissance"]
+};
 
         const TYPING_SPEED_MS = 10;
         const CHARS_PER_TICK = 10;
