@@ -257,13 +257,13 @@
     <div class="container">
         <aside class="sidebar">
             <div class="card guide-box">
-                <h3>📖 Guide d'utilisation</h3>
+                <h3>Guide d'utilisation</h3>
                 <p style="font-size: 0.8rem; margin-bottom: 10px; color: #555;">Recherche intelligente :</p>
                 <ul style="padding-left: 18px; font-size: 0.85rem;">
-                    <li style="margin-bottom: 8px;">1. <b>THÈME :</b> Indiquez le sujet principal</li>
-                    <li style="margin-bottom: 8px;">2. <b>MOTS-CLÉS :</b> Ajoutez des termes précis (séparés par des virgules)</li>
-                    <li style="margin-bottom: 8px;">3. <b>ANALYSE :</b> L'IA sélectionne 2 livres pertinents</li>
-                    <li style="margin-bottom: 8px;">4. <b>EXTRAITS :</b> 5 passages optimisés sont extraits</li>
+                    <li style="margin-bottom: 8px;">1. <b>THEME :</b> Indiquez le sujet principal</li>
+                    <li style="margin-bottom: 8px;">2. <b>MOTS-CLES :</b> Ajoutez des termes precis (separes par des virgules)</li>
+                    <li style="margin-bottom: 8px;">3. <b>ANALYSE :</b> L'IA selectionne 2 livres pertinents</li>
+                    <li style="margin-bottom: 8px;">4. <b>EXTRAITS :</b> 5 passages optimises sont extraits</li>
                 </ul>
             </div>
         </aside>
@@ -272,37 +272,37 @@
             <div class="card">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
-                        <label for="theme-input">Thématique</label>
+                        <label for="theme-input">Thematique</label>
                         <input type="text" id="theme-input" placeholder="Ex: Oraison, Contemplation...">
                     </div>
                     <div class="form-group">
-                        <label for="mots-cles-input">Mots-clés</label>
-                        <input type="text" id="mots-cles-input" placeholder="Ex: union, grâce, prière...">
+                        <label for="mots-cles-input">Mots-cles</label>
+                        <input type="text" id="mots-cles-input" placeholder="Ex: union, grace, priere...">
                     </div>
                 </div>
 
                 <div class="btn-row">
-                    <button id="search-btn" class="btn btn-primary" disabled onclick="startSearch()">🚀 LANCER RECHERCHE</button>
-                    <button id="stop-btn" class="btn btn-stop" onclick="stopSearch()"><span>🛑</span> ARRÊTER</button>
+                    <button id="search-btn" class="btn btn-primary" disabled onclick="startSearch()">LANCER RECHERCHE</button>
+                    <button id="stop-btn" class="btn btn-stop" onclick="stopSearch()"><span>STOP</span> ARRETER</button>
                 </div>
             </div>
 
             <div class="results-section">
                 <div class="results-area">
                     <div class="card" style="min-height: 300px;">
-                        <h3>📊 RÉSULTATS</h3>
+                        <h3>RESULTATS</h3>
                         <div id="results-content" style="color: #7f8c8d; font-style: italic; font-size: 0.85rem;">En attente...</div>
                     </div>
                 </div>
                 <div class="pdf-area">
                     <div class="card">
-                        <h3>📕 PDF</h3>
+                        <h3>PDF</h3>
                         <div id="pdf-placeholder" class="pdf-placeholder">
-                            <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">📄</span>
-                            Disponible après recherche.
+                            <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">PDF</span>
+                            Disponible apres recherche.
                         </div>
                         <div id="pdf-ready" style="display: none; text-align: center;">
-                            <button id="pdf-download-btn" class="btn btn-primary" style="width: 100%;" onclick="downloadPDF()">TÉLÉCHARGER PDF</button>
+                            <button id="pdf-download-btn" class="btn btn-primary" style="width: 100%;" onclick="downloadPDF()">TELECHARGER PDF</button>
                         </div>
                     </div>
                 </div>
@@ -314,10 +314,8 @@
     </div>
 
     <script>
-        // Configuration du proxy Hugging Face
         const HF_PROXY_URL = "https://gildasr-livres.hf.space/api/generate";
         
-        // Modèles OpenRouter à utiliser (dans l'ordre de priorité)
         const OPENROUTER_MODELS = [
             "deepseek/deepseek-r1-0528:free",
             "meta-llama/llama-3.3-70b-instruct:free",
@@ -330,14 +328,14 @@
         ];
       
         const SPIRITUAL_SYNONYMS = {
-            "prière": ["oraison", "méditation", "contemplation"],
-            "oraison": ["prière", "méditation", "contemplation"],
-            "méditation": ["oraison", "contemplation", "réflexion"],
-            "contemplation": ["oraison", "méditation", "vision"],
-            "âme": ["esprit", "cœur", "intérieur"],
-            "dieu": ["seigneur", "christ", "père"],
-            "grâce": ["don", "faveur", "miséricorde"],
-            "union": ["communion", "unité", "fusion"]
+            "priere": ["oraison", "meditation", "contemplation"],
+            "oraison": ["priere", "meditation", "contemplation"],
+            "meditation": ["oraison", "contemplation", "reflexion"],
+            "contemplation": ["oraison", "meditation", "vision"],
+            "ame": ["esprit", "coeur", "interieur"],
+            "dieu": ["seigneur", "christ", "pere"],
+            "grace": ["don", "faveur", "misericorde"],
+            "union": ["communion", "unite", "fusion"]
         };
 
         const TYPING_SPEED_MS = 10;
@@ -352,6 +350,7 @@
         let isStopped = false;
         let selectedBooks = [];
         let logsIA = [];
+        let failedModels = [];
 
         window.addEventListener('load', () => {
             document.getElementById('theme-input').addEventListener('input', validateForm);
@@ -378,32 +377,33 @@
         }
 
         function isTableOfContentsOrBiblio(text) {
-            const lowerText = text.toLowerCase();
+            if (!text) return true;
+            const lowerText = (text || '').toLowerCase();
             const sample = text.substring(0, 800);
             
-            if (lowerText.includes('bibliographie') || lowerText.includes('ouvrages cités') || lowerText.includes('sources consultées')) {
+            if (lowerText.includes('bibliographie') || lowerText.includes('ouvrages cites') || lowerText.includes('sources consultees')) {
                 return true;
             }
             
-            if (lowerText.includes('dans la même collection') || lowerText.includes('isbn') || lowerText.includes('tous droits réservés')) {
+            if (lowerText.includes('dans la meme collection') || lowerText.includes('isbn') || lowerText.includes('tous droits reserves')) {
                 return true;
             }
             
             const tocPatterns = [
-                /table des matières/i,
+                /table des matieres/i,
                 /sommaire/i,
                 /chapitre\s+\d+[\s.]+\d+/i,
                 /^[\s\d.\-]+$/m,
                 /(\.{3,}|\s{10,})\d+$/m,
             ];
             
-            const lines = sample.split('\n').filter(l => l.trim().length > 0);
+            const lines = sample.split('\n').filter(l => (l || '').trim().length > 0);
             
-            const biblioLinePattern = /^[A-Z][^.]+,\s+(Genève|Paris|Louvain|Leuven),\s+[^,]+,\s+\d{4}\.?\s*$/;
-            const biblioLines = lines.filter(l => biblioLinePattern.test(l.trim())).length;
+            const biblioLinePattern = /^[A-Z][^.]+,\s+(Geneve|Paris|Louvain|Leuven),\s+[^,]+,\s+\d{4}\.?\s*$/;
+            const biblioLines = lines.filter(l => biblioLinePattern.test((l || '').trim())).length;
             if (biblioLines > 2) return true;
             
-            const publisherPattern = /éditions?\s+[A-Z][a-zé]+|©\s*\d{4}|www\.[a-z]+\.(fr|org|com)/i;
+            const publisherPattern = /editions?\s+[A-Z][a-ze]+|©\s*\d{4}|www\.[a-z]+\.(fr|org|com)/i;
             const publisherMatches = (sample.match(publisherPattern) || []).length;
             if (publisherMatches > 2) return true;
             
@@ -417,7 +417,7 @@
 
         async function addExtraitToDisplay(passage, type, index, bookTitle, animated = false) {
             if (isTableOfContentsOrBiblio(passage.texte)) {
-                console.warn(`Extrait #${index} rejeté (TOC/biblio détectée)`);
+                console.warn(`Extrait #${index} rejete (TOC/biblio detectee)`);
                 return Promise.resolve(null);
             }
 
@@ -427,7 +427,7 @@
 
             let borderColor = type === 'ia' ? '#27ae60' : '#e67e22';
             let bgColor = type === 'ia' ? '#fff' : 'rgba(255,243,224,0.3)';
-            let typeLabel = type === 'ia' ? 'EXTRAIT IA' : 'EXTRAIT THÉMATIQUE';
+            let typeLabel = type === 'ia' ? 'EXTRAIT IA' : 'EXTRAIT THEMATIQUE';
 
             const cardId = `extrait-${index}-${Date.now()}`;
             const textId = `text-${cardId}`;
@@ -438,7 +438,7 @@
                 <h5 style="color:#1c2541; margin:5px 0 10px 0; font-size:1.1rem;">${passage.titre}</h5>
                 ${passage.contexte ? `<p style="font-size:0.85rem; color:#8B0000; font-style:italic; background:#fff5f5; padding:8px; border-radius:6px;"><strong>Analyse :</strong> ${passage.contexte}</p>` : ''}
                 <p id="${textId}" style="font-style:italic; font-size:0.95rem; line-height:1.6; color:#2c3e50;"></p>
-                <div id="${preparingId}" class="preparing-info" style="display:none;">⏳ Préparation du prochain extrait en cours...</div>
+                <div id="${preparingId}" class="preparing-info" style="display:none;">Preparation du prochain extrait en cours...</div>
             </div>`;
 
             resultsDiv.insertAdjacentHTML('beforeend', html);
@@ -468,7 +468,7 @@
 
         function stopSearch() {
             isStopped = true;
-            displayProgress("🛑 Arrêt demandé...");
+            displayProgress("Arret demande...");
         }
 
         async function loadIndexMaster() {
@@ -525,22 +525,22 @@
         }
 
         function selectBestBooks(livresArray, theme, mots) {
-            const themeWords = theme.toLowerCase().split(/[\s,]+/).filter(w => w.length > 3);
+            const themeWords = (theme || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 3);
             const expandedTheme = expandSynonyms(themeWords);
-            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+            const keywords = (mots || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
 
             const bookScores = livresArray.map(book => {
                 let score = 0;
                 
                 const bookThemes = Array.isArray(book.themes) 
-                    ? book.themes.join(' ').toLowerCase() 
-                    : (book.themes || '').toLowerCase();
+                    ? (book.themes.join(' ') || '').toLowerCase()
+                    : ((book.themes || '') || '').toLowerCase();
                     
                 const bookKeywords = Array.isArray(book.mots_cles)
-                    ? book.mots_cles.join(' ').toLowerCase()
-                    : (book.mots_cles || '').toLowerCase();
+                    ? (book.mots_cles.join(' ') || '').toLowerCase()
+                    : ((book.mots_cles || '') || '').toLowerCase();
                 
-                const searchText = `${book.titre.toLowerCase()} ${book.auteur.toLowerCase()} ${bookThemes} ${bookKeywords}`;
+                const searchText = `${(book.titre || '').toLowerCase()} ${(book.auteur || '').toLowerCase()} ${bookThemes} ${bookKeywords}`;
 
                 expandedTheme.forEach(t => {
                     if (searchText.includes(t)) score += 10;
@@ -558,9 +558,9 @@
         }
 
         function analyzeBookChunks(bookData, theme, mots) {
-            const themeWords = theme.toLowerCase().split(/[\s,]+/).filter(w => w.length > 3);
+            const themeWords = (theme || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 3);
             const expandedTheme = expandSynonyms(themeWords);
-            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+            const keywords = (mots || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
             let scores = [];
 
             bookData.chunks.forEach((chunk, index) => {
@@ -569,7 +569,7 @@
                 }
 
                 let score = 0;
-                const lowerChunk = chunk.toLowerCase();
+                const lowerChunk = (chunk || '').toLowerCase();
 
                 let hasThemeMatch = expandedTheme.some(t => lowerChunk.includes(t));
                 let hasKeywordMatch = keywords.some(k => lowerChunk.includes(k));
@@ -596,35 +596,22 @@
         function expandSynonyms(words) {
             let expanded = [...words];
             words.forEach(w => {
-                const syns = SPIRITUAL_SYNONYMS[w.toLowerCase()];
+                const syns = SPIRITUAL_SYNONYMS[(w || '').toLowerCase()];
                 if (syns) expanded.push(...syns);
             });
             return [...new Set(expanded)];
         }
 
-        async function tryIAExtraction(chunk, theme, mots) {
-            const prompt = `Tu es un outil d'extraction textuelle spécialisé. 
-Thème : « ${theme} », Mots-clés : « ${mots} ». 
-
-**RÈGLES STRICTES** :
-- IGNORE les tables des matières, sommaires, bibliographies
-- IGNORE les listes numérotées sans contenu textuel
-- Extrait UNIQUEMENT des paragraphes narratifs complets (environ 1500 caractères)
-- COMMENCE et FINIS sur des phrases complètes, ne coupe JAMAIS une phrase au milieu
-- Le texte doit être fluide et lisible, pas une liste
-
-Format JSON strict : {"passages": [{"texte": "...", "titre": "...", "contexte": "..."}]}
-Le champ "texte" doit être une COPIE EXACTE du texte source, sans modification.
-Le champ "titre" résume le contenu en quelques mots.
-Le champ "contexte" explique brièvement la pertinence par rapport au thème.
-Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
+        async function tryIAExtraction(chunk, theme, mots, excludeModels = []) {
+            const promptText = "Tu es un expert en theologie chretienne (patristique, scolastique, mystique), en exegese biblique et en philosophie de la religion. Ton role est d'analyser des extraits de textes sacres ou d'etudes theologiques.\n\n**CONTEXTE DE RECHERCHE** :\nTheme : " + theme + "\nMots-cles : " + mots + "\n\n**DIRECTIVES STRICTES** :\n1. Rigueur semantique : Distingue toujours le sens theologique des termes (ex: l'Amour comme 'Caritas' ou 'Agape', la Grace comme don divin gratuit, la Nature humaine vs divine).\n2. Contextualisation : Identifie si le texte releve de la mystique (experience de l'union a Dieu), de l'exegese (interpretation des Ecritures), de la dogmatique ou de la liturgie.\n3. Nuances confessionnelles : Respecte les distinctions entre traditions (catholique, orthodoxe, protestante) et, le cas echeant, les ponts avec la mystique musulmane (soufisme).\n4. Profondeur metaphysique : Ne simplifie pas le langage theologique. Si l'auteur parle de 'Volonte', 'Essence divine', 'Theosis' ou 'Union mystique', traite-les comme des concepts philosophiques et spirituels precis.\n\n**REGLES D'EXTRACTION** :\n- IGNORE absolument : tables des matieres, sommaires, bibliographies, listes numerotees sans contenu narratif\n- Extrait UNIQUEMENT des paragraphes theologiques coherents (environ 1500 caracteres)\n- COMMENCE et FINIS sur des phrases completes (jamais de coupure au milieu d'une phrase)\n- Le texte doit etre fluide, contemplatif ou argumentatif, pas une liste\n\n**INTERDICTION ABSOLUE D'HALLUCINATION** :\n- NE MODIFIE PAS le texte source\n- NE RESUME PAS avec tes propres mots\n- NE PARAPHRASE PAS\n- NE CORRIGE PAS l'orthographe ou la grammaire\n- NE REORGANISE PAS les phrases\n- NE COMPLETE PAS les phrases incompletes\n- Tu dois COPIER MOT POUR MOT un extrait existant dans le texte source\n- REPRODUCTION TEXTUELLE EXACTE UNIQUEMENT\n\n**FORMAT DE REPONSE** (JSON strict) :\n{\"passages\": [{\"texte\": \"...\", \"titre\": \"...\", \"contexte\": \"...\"}]}\n\n- \"texte\" : COPIE MOT A MOT, CARACTERE PAR CARACTERE du passage source, SANS AUCUNE MODIFICATION\n- \"titre\" : Resume en 3-6 mots (ex: \"L'union mystique selon Jean de la Croix\")\n- \"contexte\" : Explication theologique de la pertinence (ex: \"Developpe la notion d'aneantissement de la volonte propre dans la contemplation infuse\")\n\n**TEXTE SOURCE** :\n" + chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS);
 
             let currentDelay = API_RETRY_DELAY_MS;
+            const availableModels = OPENROUTER_MODELS.filter(m => !excludeModels.includes(m));
 
-            for (let modelIdx = 0; modelIdx < OPENROUTER_MODELS.length; modelIdx++) {
+            for (let modelIdx = 0; modelIdx < availableModels.length; modelIdx++) {
                 if (isStopped) return null;
 
-                const model = OPENROUTER_MODELS[modelIdx];
+                const model = availableModels[modelIdx];
                 await new Promise(r => setTimeout(r, currentDelay));
 
                 try {
@@ -636,7 +623,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
                             model: model,
-                            prompt: prompt,
+                            prompt: promptText,
                             max_tokens: 2000,
                             temperature: 0.3
                         }),
@@ -655,30 +642,36 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                                 const parsed = JSON.parse(cleanJson);
                                 if (parsed.passages && parsed.passages[0]) {
                                     if (isTableOfContentsOrBiblio(parsed.passages[0].texte)) {
-                                        logsIA.push(`⚠️ ${model}: Extrait rejeté (biblio détectée)`);
+                                        logsIA.push(`Alerte ${model}: Extrait rejete (biblio detectee)`);
+                                        failedModels.push(model);
                                         continue;
                                     }
-                                    logsIA.push(`✓ Succès avec ${model}`);
+                                    logsIA.push(`OK Succes avec ${model}`);
                                     currentDelay = API_RETRY_DELAY_MS;
                                     return parsed.passages[0];
                                 }
                             } catch (parseError) {
-                                logsIA.push(`❌ ${model}: ${parseError.message}`);
+                                logsIA.push(`Erreur ${model}: ${parseError.message}`);
+                                failedModels.push(model);
                             }
                         }
-                        logsIA.push(`⚠️ ${model}: Réponse invalide`);
+                        logsIA.push(`Alerte ${model}: Reponse invalide`);
+                        failedModels.push(model);
                     } else if (response.status === 429) {
                         currentDelay = Math.min(currentDelay * 1.5, 10000);
-                        logsIA.push(`⚠️ ${model}: Erreur 429 (quota)`);
+                        logsIA.push(`Alerte ${model}: Erreur 429 (quota)`);
+                        failedModels.push(model);
                     } else {
-                        logsIA.push(`⚠️ ${model}: Erreur ${response.status}`);
+                        logsIA.push(`Alerte ${model}: Erreur ${response.status}`);
+                        failedModels.push(model);
                     }
                 } catch (e) {
                     if (e.name === 'AbortError') {
-                        logsIA.push(`⏱️ ${model}: Timeout`);
+                        logsIA.push(`Timer ${model}: Timeout`);
                     } else {
-                        logsIA.push(`❌ ${model}: ${e.message}`);
+                        logsIA.push(`Erreur ${model}: ${e.message}`);
                     }
+                    failedModels.push(model);
                 }
             }
             return null;
@@ -698,9 +691,10 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
             currentPassagesBruts = [];
             selectedBooks = [];
             logsIA = [];
+            failedModels = [];
 
             try {
-                displayProgress("📚 Chargement de l'index des livres...");
+                displayProgress("Chargement de l'index des livres...");
                 const indexData = await loadIndexMaster();
                 
                 const livresArray = Array.isArray(indexData) ? indexData : indexData.livres;
@@ -709,31 +703,31 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                     throw new Error("L'index ne contient aucun livre.");
                 }
 
-                displayProgress("🔍 Sélection des livres les plus pertinents...");
+                displayProgress("Selection des livres les plus pertinents...");
                 const bestBooks = selectBestBooks(livresArray, theme, mots);
 
                 if (bestBooks.length < 2) {
-                    throw new Error("Pas assez de livres pertinents trouvés dans l'index.");
+                    throw new Error("Pas assez de livres pertinents trouves dans l'index.");
                 }
 
                 selectedBooks = bestBooks;
-                displayProgress(`✅ Livres sélectionnés : ${bestBooks[0].titre} & ${bestBooks[1].titre}`);
+                displayProgress(`OK Livres selectionnes : ${bestBooks[0].titre} & ${bestBooks[1].titre}`);
 
-                displayProgress("📖 Chargement du premier livre...");
+                displayProgress("Chargement du premier livre...");
                 const book1Data = await loadBookJSON(bestBooks[0].fichier_json);
                 const scores1 = analyzeBookChunks(book1Data, theme, mots);
 
                 if (scores1.length === 0) {
-                    displayProgress(`⚠️ Peu de correspondance dans ${bestBooks[0].titre}, analyse des deux livres...`);
+                    displayProgress(`Alerte Peu de correspondance dans ${bestBooks[0].titre}, analyse des deux livres...`);
                     
                     const book2Data = await loadBookJSON(bestBooks[1].fichier_json);
                     const scores2 = analyzeBookChunks(book2Data, theme, mots);
                     
                     if (scores2.length === 0) {
-                        throw new Error(`Aucun extrait pertinent trouvé dans les livres sélectionnés. Essayez des mots-clés différents.`);
+                        throw new Error(`Aucun extrait pertinent trouve dans les livres selectionnes. Essayez des mots-cles differents.`);
                     }
                     
-                    displayProgress(`🤖 Analyse IA du 1er extrait (${bestBooks[1].titre})...`);
+                    displayProgress(`Analyse IA du 1er extrait (${bestBooks[1].titre})...`);
                     const p1 = await tryIAExtraction(scores2[0], theme, mots);
                     
                     if (p1) {
@@ -744,7 +738,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                     }
                     
                     if (!isStopped) {
-                        displayProgress("🔎 Finalisation des extraits thématiques...");
+                        displayProgress("Finalisation des extraits thematiques...");
                         const allScores = [
                             ...scores1.map(s => ({ ...s, bookTitle: bestBooks[0].titre, bookAuthor: bestBooks[0].auteur })),
                             ...scores2.slice(1).map(s => ({ ...s, bookTitle: bestBooks[1].titre, bookAuthor: bestBooks[1].auteur }))
@@ -761,7 +755,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
 
                             const brut = {
                                 texte: textBrut,
-                                titre: `Extrait thématique #${currentPassagesBruts.length + 1}`,
+                                titre: `Extrait thematique #${currentPassagesBruts.length + 1}`,
                                 contexte: '',
                                 livre: score.bookTitle,
                                 auteur: score.bookAuthor
@@ -777,7 +771,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                     return;
                 }
 
-                displayProgress(`🤖 Analyse IA du 1er passage dans ${bestBooks[0].titre}...`);
+                displayProgress(`Analyse IA du 1er passage dans ${bestBooks[0].titre}...`);
                 const p1 = await tryIAExtraction(scores1[0], theme, mots);
 
                 let firstExtractPromise = null;
@@ -789,7 +783,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                     currentPassagesIA.push(p1);
                     preparingId1 = await addExtraitToDisplay(p1, 'ia', 0, bestBooks[0].titre, true);
                 } else {
-                    displayProgress("⚠️ Échec de l'extraction IA pour le 1er livre, passage aux extraits bruts...");
+                    displayProgress("Alerte Echec de l'extraction IA pour le 1er livre, passage aux extraits bruts...");
                 }
 
                 if (isStopped) {
@@ -804,12 +798,12 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                         document.getElementById(preparingId1).style.display = 'block';
                     }
 
-                    displayProgress("Bg: Chargement du deuxième livre...");
+                    displayProgress("Bg: Chargement du deuxieme livre...");
                     const book2Data = await loadBookJSON(bestBooks[1].fichier_json);
                     const scores2 = analyzeBookChunks(book2Data, theme, mots);
 
                     if (scores2.length > 0) {
-                        const p2 = await tryIAExtraction(scores2[0], theme, mots);
+                        const p2 = await tryIAExtraction(scores2[0], theme, mots, failedModels);
                         return { p2, scores2, book2Data, bookInfo: bestBooks[1] };
                     }
                     return { p2: null, scores2, book2Data, bookInfo: bestBooks[1] };
@@ -827,11 +821,11 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                     currentPassagesIA.push(resultBook2.p2);
                     await addExtraitToDisplay(resultBook2.p2, 'ia', 1, bestBooks[1].titre, true);
                 } else if (resultBook2 && !resultBook2.p2) {
-                    displayProgress(`ℹ️ Pas d'extrait supplémentaire trouvé dans ${bestBooks[1].titre}`);
+                    displayProgress(`Info Pas d'extrait supplementaire trouve dans ${bestBooks[1].titre}`);
                 }
 
                 if (!isStopped) {
-                    displayProgress("🔎 Finalisation des extraits thématiques...");
+                    displayProgress("Finalisation des extraits thematiques...");
 
                     const allScores = [
                         ...scores1.slice(1).map(s => ({ ...s, bookTitle: bestBooks[0].titre, bookAuthor: bestBooks[0].auteur })),
@@ -849,7 +843,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
 
                         const brut = {
                             texte: textBrut,
-                            titre: `Extrait thématique #${currentPassagesBruts.length + 1}`,
+                            titre: `Extrait thematique #${currentPassagesBruts.length + 1}`,
                             contexte: '',
                             livre: score.bookTitle,
                             auteur: score.bookAuthor
@@ -863,7 +857,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                 finalizeResults();
 
             } catch (err) {
-                document.getElementById('results-content').innerHTML = `❌ Erreur : ${err.message}`;
+                document.getElementById('results-content').innerHTML = `Erreur : ${err.message}`;
                 console.error(err);
             } finally {
                 btn.disabled = false;
@@ -878,7 +872,7 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
             if (logsIA.length > 0) {
                 resultsDiv.insertAdjacentHTML('beforeend', `
                     <div style="margin-top:25px; border-top:1px solid #ddd; padding-top:15px;">
-                        <h4 style="font-size:0.8rem; color:#666; margin-bottom:10px;">🛠️ RAPPORT TECHNIQUE</h4>
+                        <h4 style="font-size:0.8rem; color:#666; margin-bottom:10px;">RAPPORT TECHNIQUE</h4>
                         <ul style="font-size:0.75rem; color:#777; list-style:none; padding:0;">
                             ${logsIA.map(l => `<li style="margin-bottom:4px;">${l}</li>`).join('')}
                         </ul>
@@ -903,8 +897,8 @@ Texte source : ${chunk.text.substring(0, MAX_SEGMENT_SOURCE_CHARS)}`;
                 pageSize: 'A4',
                 pageMargins: [60, 80, 60, 60],
                 content: [
-                    { text: 'EXTRAITS LITTÉRAIRES', style: 'mainTitle', alignment: 'center', margin: [0, 150, 0, 20] },
-                    { text: `Critères : ${theme} / ${mots}`, margin: [0, 20, 0, 0], bold: true, alignment: 'center' },
+                    { text: 'EXTRAITS LITTERAIRES', style: 'mainTitle', alignment: 'center', margin: [0, 150, 0, 20] },
+                    { text: `Criteres : ${theme} / ${mots}`, margin: [0, 20, 0, 0], bold: true, alignment: 'center' },
                     { text: `Sources : ${booksUsed}`, margin: [0, 10, 0, 0], alignment: 'center', fontSize: 12, color: '#e67e22' },
                     { text: `Date : ${dateStr}`, margin: [0, 5, 0, 0], alignment: 'center' },
                     { text: '', pageBreak: 'after' },
