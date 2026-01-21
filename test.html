@@ -850,8 +850,13 @@
                     } else {
                         // Mode sans IA (Raw)
                         await new Promise(r => setTimeout(r, 1000)); // Délai esthétique court
-                        mettreAJourExtraitRaffine(tempCard, extrait.text, 'raw');
-                        currentPassagesBruts.push(extrait.text);
+                        // On limite la taille du texte brut pour éviter des documents trop longs
+                        const texteCoupe = extrait.text.length > 1500
+                            ? extrait.text.substring(0, 1500) + "[...]"
+                            : extrait.text;
+
+                        mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
+                        currentPassagesBruts.push(texteCoupe);
                     }
                 }
 
@@ -943,20 +948,24 @@
 
 
         async function raffinerExtraitAvecIA(texte, theme, mots, titreLivre) {
-            const prompt = `Tu es un expert en littérature spirituelle. Voici un extrait du livre "${titreLivre}".
-            
-EXTRAIT BRUT :
-${texte}
+            const prompt = `SYSTEM ROLE: You are a text extraction engine. You are NOT a chatbot. 
+TASK: Extract the exact relevant passage from the provided text based on the theme and keywords.
 
-CONSIGNES STRICTES :
-1. Recherche dans cet extrait le passage spécifique qui traite du thème "${theme}" et des mots-clés "${mots}".
-2. Ta réponse doit être UNIQUEMENT l'extrait exact tiré du texte ci-dessus.
-3. INTERDICTION de résumer, de transformer, d'ajouter des concepts ou de faire des analyses.
-4. Tu dois couper l'extrait là où le sujet se termine, pour ne garder que la partie pertinente.
-5. Ne commence pas ta réponse par "Voici l'extrait" ou quoi que ce soit d'autre. Réponds uniquement par le texte brut du passage sélectionné.
-6. Ne change pas un seul mot, respecte la ponctuation originale.
+THEME: "${theme}"
+KEYWORDS: "${mots}"
+SOURCE TEXT:
+"${texte}"
 
-Si aucun passage n'est vraiment pertinent, renvoie simplement les 500 premiers caractères de l'extrait brut.`;
+INSTRUCTIONS:
+1. Output ONLY the extracted text passage.
+2. Do NOT add "Here is the summary" or "Analysis:".
+3. Do NOT summarize or paraphrase.
+4. Do NOT add quotation marks at the start/end unless they are in the text.
+5. If the text does not contain relevant content, return the first 500 characters.
+6. STOP immediately when the relevant topic ends.
+7. Your output must be a direct copy-paste of a substring of the source text.
+
+OUTPUT:`;
 
             let lastError = null;
 
