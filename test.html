@@ -754,7 +754,7 @@
                     }
 
                     // Délai pour éviter le rate limiting (429)
-                    await new Promise(r => setTimeout(r, 2000));
+                    await new Promise(r => setTimeout(r, 5000));
                 }
 
                 console.log(`✅ Traitement terminé: ${currentPassagesIA.length} extraits raffinés`);
@@ -852,7 +852,7 @@ Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
 
             let attempt = 0;
             const maxAttempts = 5;
-            let delay = 1000;
+            let delay = 3000;
 
             // Boucle de retry pour gérer les erreurs 429 (Rate Limit)
             while (attempt < maxAttempts) {
