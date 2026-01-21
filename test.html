@@ -695,21 +695,27 @@ async function startSearch() {
             
             // Appeler l'IA pour raffiner l'extrait
             try {
-                const extraitRaffine = await raffinerExtraitAvecIA(
+                const resultat = await raffinerExtraitAvecIA(
                     extrait.text, 
                     theme, 
                     mots, 
                     extrait.livre.titre
                 );
                 
-                // Mettre à jour avec la version raffinée
-                mettreAJourExtraitRaffine(tempCard, extraitRaffine);
-                currentPassagesIA.push(extraitRaffine);
+                if (resultat.success) {
+                    // Mise à jour avec la version raffinée
+                    mettreAJourExtraitRaffine(tempCard, resultat.text, true);
+                    currentPassagesIA.push(resultat.text);
+                } else {
+                    // Afficher le texte original sans marquer comme raffiné
+                    mettreAJourExtraitRaffine(tempCard, resultat.text, false);
+                }
                 
             } catch (err) {
                 console.error("Erreur IA pour extrait", i, err);
-                // Garder la version brute si l'IA échoue
-                marquerExtraitErreur(tempCard);
+                // Afficher le texte original en cas d'erreur
+                const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
+                mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
             }
             
             // Petit délai entre chaque appel
@@ -766,15 +772,22 @@ function afficherExtraitAvecChargement(titre, auteur, texte, score, numero) {
     return card;
 }
 
-function mettreAJourExtraitRaffine(card, texteRaffine) {
+function mettreAJourExtraitRaffine(card, texteRaffine, estRaffineParIA = true) {
     const content = card.querySelector(".extrait-content");
+    
+    const badge = estRaffineParIA 
+        ? `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--accent));">
+            ✨ Extrait raffiné par IA
+           </div>`
+        : `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: #dc2626;">
+            ⚠️ Extrait brut (API IA indisponible)
+           </div>`;
+    
     content.innerHTML = `
         <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify;">
             ${texteRaffine}
         </p>
-        <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--accent));">
-            ✨ Extrait raffiné par IA
-        </div>
+        ${badge}
     `;
 }
 
@@ -812,10 +825,16 @@ Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
 
         if (response.ok) {
             const data = await response.json();
-            return data.generated_text || data[0]?.generated_text || texte;
+            const result = data.generated_text || data[0]?.generated_text;
+            if (result && result !== texte) {
+                console.log("✅ HuggingFace a réussi");
+                return { success: true, text: result };
+            }
+        } else {
+            console.log(`❌ HuggingFace erreur ${response.status}`);
         }
     } catch (e) {
-        console.log("HF échoué, essai OpenRouter...");
+        console.log("❌ HuggingFace exception:", e.message);
     }
 
     // Fallback sur OpenRouter
@@ -836,14 +855,24 @@ Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
 
         if (response.ok) {
             const data = await response.json();
-            return data.choices?.[0]?.message?.content || texte;
+            const result = data.choices?.[0]?.message?.content;
+            if (result) {
+                console.log("✅ OpenRouter a réussi");
+                return { success: true, text: result };
+            }
+        } else {
+            console.log(`❌ OpenRouter erreur ${response.status}`);
         }
     } catch (e) {
-        console.error("Erreur OpenRouter:", e);
+        console.error("❌ OpenRouter exception:", e.message);
     }
 
-    // Si tout échoue, retourner le texte original
-    return texte.substring(0, MAX_EXTRAIT_CHARS);
+    // Si tout échoue, retourner le texte original avec un flag d'échec
+    console.log("⚠️ Toutes les APIs ont échoué, texte original conservé");
+    return { 
+        success: false, 
+        text: texte.substring(0, MAX_EXTRAIT_CHARS) 
+    };
 }
 
 </script>
