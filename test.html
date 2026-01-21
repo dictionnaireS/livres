@@ -631,21 +631,38 @@ async function startSearch() {
     logsIA = [];
 
     try {
+        console.log("🔍 Démarrage recherche:", { theme, mots });
+        
         const index = await loadIndexMaster();
         const livres = index.livres || index;
+        console.log(`📚 ${livres.length} livres trouvés dans l'index`);
 
         selectedBooks = selectBestBooks(livres, theme, mots);
-        if (selectedBooks.length < 2) throw new Error("Livres insuffisants");
+        console.log("📖 Livres sélectionnés:", selectedBooks.map(b => b.titre || b.fichier_json));
+        
+        if (selectedBooks.length < 2) {
+            throw new Error(`Seulement ${selectedBooks.length} livre(s) sélectionné(s). Essayez des mots-clés plus généraux.`);
+        }
 
         // Charger et analyser les deux livres
+        document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Chargement du premier livre...</p>";
         const book1 = await loadBookJSON(selectedBooks[0].fichier_json);
+        console.log(`✅ Livre 1 chargé: ${book1.chunks.length} segments`);
+        
+        document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Analyse du premier livre...</p>";
         const scores1 = analyzeBookChunks(book1, theme, mots);
+        console.log(`📊 Livre 1: ${scores1.length} extraits pertinents trouvés`);
 
+        document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Chargement du second livre...</p>";
         const book2 = await loadBookJSON(selectedBooks[1].fichier_json);
+        console.log(`✅ Livre 2 chargé: ${book2.chunks.length} segments`);
+        
+        document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Analyse du second livre...</p>";
         const scores2 = analyzeBookChunks(book2, theme, mots);
+        console.log(`📊 Livre 2: ${scores2.length} extraits pertinents trouvés`);
 
         if (scores1.length === 0 && scores2.length === 0) {
-            throw new Error("Aucun extrait pertinent trouvé dans ces ouvrages");
+            throw new Error("Aucun extrait pertinent trouvé dans ces ouvrages. Essayez d'autres mots-clés.");
         }
 
         // Afficher les résultats bruts (sans IA pour l'instant)
@@ -653,23 +670,34 @@ async function startSearch() {
         
         // Afficher les meilleurs extraits du livre 1
         const topScores1 = scores1.slice(0, 3);
-        topScores1.forEach((segment, idx) => {
-            afficherExtrait(book1.titre, book1.auteur, segment.text, segment.score, idx + 1);
-        });
+        if (topScores1.length > 0) {
+            topScores1.forEach((segment, idx) => {
+                afficherExtrait(book1.titre, book1.auteur, segment.text, segment.score, idx + 1);
+            });
+        }
 
         // Afficher les meilleurs extraits du livre 2
         const topScores2 = scores2.slice(0, 3);
-        topScores2.forEach((segment, idx) => {
-            afficherExtrait(book2.titre, book2.auteur, segment.text, segment.score, idx + 4);
-        });
+        if (topScores2.length > 0) {
+            topScores2.forEach((segment, idx) => {
+                afficherExtrait(book2.titre, book2.auteur, segment.text, segment.score, idx + 4);
+            });
+        }
+
+        console.log(`✅ Affichage terminé: ${topScores1.length + topScores2.length} extraits`);
 
         // Activer le PDF
         document.getElementById("pdf-placeholder").style.display = "none";
         document.getElementById("pdf-ready").style.display = "block";
 
     } catch (e) {
-        document.getElementById("results-content").innerHTML = `<p style='color:#dc2626; text-align:center;'>❌ ${e.message}</p>`;
-        console.error("Erreur:", e);
+        document.getElementById("results-content").innerHTML = `
+            <div style='color:#dc2626; text-align:center; padding: 2rem;'>
+                <p style='font-size: 1.2rem; margin-bottom: 1rem;'>❌ ${e.message}</p>
+                <p style='font-size: 0.9rem; opacity: 0.7;'>Consultez la console (F12) pour plus de détails</p>
+            </div>
+        `;
+        console.error("❌ Erreur complète:", e);
     }
 }
 
@@ -702,16 +730,3 @@ function afficherExtrait(titre, auteur, texte, score, numero) {
     
     document.getElementById("results-content").appendChild(card);
 }
-
-function stopSearch() {
-    isStopped = true;
-    document.getElementById("results-content").insertAdjacentHTML('beforeend', "<p style='color:red; text-align:center; margin-top:1rem;'>🛑 Recherche arrêtée.</p>");
-}
-
-function downloadPDF() {
-    alert("Génération du PDF...");
-    // Logique pdfMake ici
-}
-</script>
-
-</body>
