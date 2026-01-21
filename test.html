@@ -372,6 +372,17 @@
 
         const HF_PROXY_URL = "https://gildasr-livres.hf.space/api/generate";
 
+        const OPENROUTER_MODELS = [
+            "deepseek/deepseek-r1-0528:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "google/gemma-3-27b-it:free",
+            "openai/gpt-oss-120b:free",
+            "google/gemma-3-12b-it:free",
+            "mistralai/devstral-2512:free",
+            "anthropic/claude-3-haiku",
+            "google/gemini-flash-1.5"
+        ];
+
 
 
         const SPIRITUAL_SYNONYMS = {
@@ -835,6 +846,8 @@
             }
         }
 
+
+
         async function raffinerExtraitAvecIA(texte, theme, mots, titreLivre) {
             const prompt = `Tu es un expert en littérature spirituelle. Voici un extrait du livre "${titreLivre}".
 
@@ -850,57 +863,53 @@ Fournis :
 
 Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
 
-            let attempt = 0;
-            const maxAttempts = 5;
-            let delay = 3000;
+            let lastError = null;
 
-            // Boucle de retry pour gérer les erreurs 429 (Rate Limit)
-            while (attempt < maxAttempts) {
-                attempt++;
+            // On boucle sur les modèles disponibles comme dans index.html
+            for (const model of OPENROUTER_MODELS) {
                 try {
+                    console.log(`🤖 Tentative avec le modèle : ${model}`);
+
                     const response = await fetch(HF_PROXY_URL, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ inputs: prompt })
+                        body: JSON.stringify({
+                            model: model,
+                            prompt: prompt,
+                            max_tokens: 800,
+                            temperature: 0.3
+                        })
                     });
-
-                    if (response.status === 429) {
-                        console.warn(`⚠️ HuggingFace 429 (Trop de requêtes) - Tentative ${attempt}/${maxAttempts}. Attente de ${delay}ms...`);
-                        await new Promise(r => setTimeout(r, delay));
-                        delay *= 2; // Exponential backoff
-                        continue;
-                    }
 
                     if (response.ok) {
                         const data = await response.json();
-                        const result = data.generated_text || (Array.isArray(data) && data[0]?.generated_text);
+                        // Le proxy peut renvoyer différents formats selon le backend
+                        const result = data.response || data.text || data.generated_text || (data.choices && data.choices[0]?.message?.content);
 
                         if (result) {
-                            console.log("✅ HuggingFace a réussi");
+                            console.log(`✅ Succès avec ${model}`);
                             return { success: true, text: result };
                         }
-                    } else {
-                        console.log(`❌ HuggingFace erreur ${response.status}`);
-                        // Pour les erreurs serveur (5xx), on peut aussi retenter
-                        if (response.status >= 500) {
-                            console.warn(`⚠️ Erreur serveur ${response.status} - Tentative ${attempt}/${maxAttempts}...`);
-                            await new Promise(r => setTimeout(r, delay));
-                            delay *= 2;
-                            continue;
-                        }
-                        // Pour les autres erreurs (400, 401, etc.), on arrête
-                        break;
                     }
+
+                    // Gestion des rate limits (429/402) -> on passe simplement au modèle suivant
+                    if (response.status === 429 || response.status === 402) {
+                        console.warn(`⚠️ Rate limit (${response.status}) sur ${model} - Passage au suivant...`);
+                        // Petit délai de politesse avant le suivant
+                        await new Promise(r => setTimeout(r, 1000));
+                        continue;
+                    }
+
+                    console.warn(`❌ Erreur ${response.status} sur ${model}`);
+
                 } catch (e) {
-                    console.log("❌ HuggingFace exception:", e.message);
-                    // En cas d'erreur réseau, on peut retenter
-                    await new Promise(r => setTimeout(r, delay));
-                    delay *= 2;
+                    console.error(`❌ Exception sur ${model}:`, e.message);
+                    lastError = e;
                 }
             }
 
-            // Si tout échoue ou si on a épuisé les tentatives
-            console.log("⚠️ API a échoué après tentatives, texte original conservé");
+            // Si tous les modèles échouent
+            console.log("⚠️ Tous les modèles ont échoué, texte original conservé");
             return {
                 success: false,
                 text: texte.substring(0, MAX_EXTRAIT_CHARS)
