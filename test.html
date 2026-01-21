@@ -835,15 +835,29 @@
 
                             if (resultat.success) {
                                 mettreAJourExtraitRaffine(tempCard, resultat.text, true);
-                                currentPassagesIA.push(resultat.text);
+                                currentPassagesIA.push({
+                                    text: resultat.text,
+                                    titre: extrait.livre.titre,
+                                    auteur: extrait.livre.auteur
+                                });
                             } else {
                                 mettreAJourExtraitRaffine(tempCard, resultat.text, false);
+                                currentPassagesIA.push({
+                                    text: resultat.text,
+                                    titre: extrait.livre.titre,
+                                    auteur: extrait.livre.auteur
+                                });
                             }
 
                         } catch (err) {
                             console.error("Erreur IA pour extrait", i, err);
                             const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
                             mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
+                            currentPassagesIA.push({
+                                text: texteOriginal,
+                                titre: extrait.livre.titre,
+                                auteur: extrait.livre.auteur
+                            });
                         }
                         // Délai important après un appel IA
                         await new Promise(r => setTimeout(r, 5000));
@@ -856,7 +870,11 @@
                             : extrait.text;
 
                         mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
-                        currentPassagesBruts.push(texteCoupe);
+                        currentPassagesBruts.push({
+                            text: texteCoupe,
+                            titre: extrait.livre.titre,
+                            auteur: extrait.livre.auteur
+                        });
                     }
                 }
 
@@ -948,8 +966,8 @@
 
 
         async function raffinerExtraitAvecIA(texte, theme, mots, titreLivre) {
-            const prompt = `SYSTEM ROLE: You are a text extraction engine. You are NOT a chatbot. 
-TASK: Extract the exact relevant passage from the provided text based on the theme and keywords.
+            const prompt = `SYSTEM ROLE: You are a text extraction engine. 
+TASK: Extract the relevant passage from the provided text based on the theme and keywords.
 
 THEME: "${theme}"
 KEYWORDS: "${mots}"
@@ -960,10 +978,9 @@ INSTRUCTIONS:
 1. Output ONLY the extracted text passage.
 2. Do NOT add "Here is the summary" or "Analysis:".
 3. Do NOT summarize or paraphrase.
-4. Do NOT add quotation marks at the start/end unless they are in the text.
-5. If the text does not contain relevant content, return the first 500 characters.
-6. STOP immediately when the relevant topic ends.
-7. Your output must be a direct copy-paste of a substring of the source text.
+4. Keep the passage coherent and sufficiently long to understand the context (at least 200 words if possible).
+5. If the text does not contain relevant content, return the whole text.
+6. Your output must be a direct copy-paste of a substring of the source text.
 
 OUTPUT:`;
 
@@ -1032,16 +1049,20 @@ OUTPUT:`;
             pdfContent.push({ text: '\n' });
 
             // Extraits IA
-            currentPassagesIA.forEach((txt, i) => {
-                pdfContent.push({ text: `Extrait choisi #${i + 1} (Raffiné par IA)`, style: 'title' });
-                pdfContent.push({ text: txt, style: 'body' });
+            currentPassagesIA.forEach((item, i) => {
+                pdfContent.push({ text: item.titre, style: 'title' });
+                pdfContent.push({ text: item.auteur, style: 'author' });
+                pdfContent.push({ text: `(Passage choisi #${i + 1})`, italics: true, fontSize: 9, margin: [0, 0, 0, 5] });
+                pdfContent.push({ text: item.text, style: 'body' });
                 pdfContent.push({ text: '\n\n' });
             });
 
             // Extraits Bruts
-            currentPassagesBruts.forEach((txt, i) => {
-                pdfContent.push({ text: `Extrait brut #${i + 1}`, style: 'title' });
-                pdfContent.push({ text: txt, style: 'body' });
+            currentPassagesBruts.forEach((item, i) => {
+                pdfContent.push({ text: item.titre, style: 'title' });
+                pdfContent.push({ text: item.auteur, style: 'author' });
+                pdfContent.push({ text: `(Passage complémentaire #${i + 1})`, italics: true, fontSize: 9, margin: [0, 0, 0, 5] });
+                pdfContent.push({ text: item.text, style: 'body' });
                 pdfContent.push({ text: '\n\n' });
             });
 
@@ -1055,7 +1076,8 @@ OUTPUT:`;
                 styles: {
                     header: { fontSize: 24, bold: true, alignment: 'center', margin: [0, 0, 0, 10], color: '#1c2541' },
                     subheader: { fontSize: 12, italics: true, alignment: 'center', color: '#d4af37', margin: [0, 0, 0, 20] },
-                    title: { fontSize: 14, bold: true, color: '#1c2541', margin: [0, 10, 0, 5] },
+                    title: { fontSize: 14, bold: true, color: '#1c2541', margin: [0, 5, 0, 2] },
+                    author: { fontSize: 11, bold: true, color: '#d4af37', margin: [0, 0, 0, 5], textTransform: 'uppercase' },
                     body: { fontSize: 11, lineHeight: 1.5, alignment: 'justify', font: 'Roboto' }
                 },
                 defaultStyle: { font: 'Roboto' }
