@@ -715,94 +715,91 @@ expandedKeywords.forEach(k => {
                     throw new Error("Aucun extrait pertinent trouvé dans ces ouvrages. Essayez d'autres mots-clés.");
                 }
 
-                // Préparer les extraits pour l'IA
-                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>🤖 Traitement par l'IA en cours...</p>";
+               // Préparer les extraits pour l'IA
+			   document.getElementById("results-content").innerHTML = "";
+			   
+const topScores1 = scores1.slice(0, 3);
+const topScores2 = scores2.slice(0, 2);
 
-                const topScores1 = scores1.slice(0, 3);
-                const topScores2 = scores2.slice(0, 2);
+const allExtraits = [
+    ...topScores1.map(s => ({ ...s, livre: book1 })),
+    ...topScores2.map(s => ({ ...s, livre: book2 }))
+];
 
-                const allExtraits = [
-                    ...topScores1.map(s => ({ ...s, livre: book1 })),
-                    ...topScores2.map(s => ({ ...s, livre: book2 }))
-                ];
+// Traiter chaque extrait avec l'IA
+for (let i = 0; i < allExtraits.length; i++) {
+    if (isStopped) break;
 
-                // Traiter chaque extrait avec l'IA
-                document.getElementById("results-content").innerHTML = "";
+    const extrait = allExtraits[i];
 
-                for (let i = 0; i < allExtraits.length; i++) {
-                    if (isStopped) break;
+    // Afficher d'abord la version brute
+    const tempCard = afficherExtraitAvecChargement(
+        extrait.livre.titre,
+        extrait.livre.auteur,
+        extrait.text,
+        extrait.score,
+        i + 1
+    );
 
-                    const extrait = allExtraits[i];
+    // LOGIQUE HYBRIDE : 3 premiers SANS IA, 2 derniers AVEC IA
+    if (i >= 3) {
+        // Mode AVEC IA (les 2 derniers)
+        try {
+            const resultat = await raffinerExtraitAvecIA(
+                extrait.text,
+                theme,
+                mots,
+                extrait.livre.titre
+            );
 
-                    // Afficher d'abord la version brute
-                    const tempCard = afficherExtraitAvecChargement(
-                        extrait.livre.titre,
-                        extrait.livre.auteur,
-                        extrait.text,
-                        extrait.score,
-                        i + 1
-                    );
+            if (resultat.success) {
+                mettreAJourExtraitRaffine(tempCard, resultat.text, true);
+                currentPassagesIA.push({
+                    text: resultat.text,
+                    titre: extrait.livre.titre,
+                    auteur: extrait.livre.auteur
+                });
+            } else {
+                mettreAJourExtraitRaffine(tempCard, resultat.text, false);
+                currentPassagesIA.push({
+                    text: resultat.text,
+                    titre: extrait.livre.titre,
+                    auteur: extrait.livre.auteur
+                });
+            }
 
-                    // LOGIQUE HYBRIDE : 2 premiers avec IA, les suivants sans IA
-                    if (i < 2) {
-                        try {
-                            const resultat = await raffinerExtraitAvecIA(
-                                extrait.text,
-                                theme,
-                                mots,
-                                extrait.livre.titre
-                            );
+        } catch (err) {
+            console.error("Erreur IA pour extrait", i, err);
+            const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
+            mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
+            currentPassagesIA.push({
+                text: texteOriginal,
+                titre: extrait.livre.titre,
+                auteur: extrait.livre.auteur
+            });
+        }
+        // Délai important après un appel IA
+        await new Promise(r => setTimeout(r, 5000));
+    } else {
+        // Mode sans IA (Raw) - les 3 premiers
+        await new Promise(r => setTimeout(r, 1000));
+        const texteCoupe = extrait.text.length > 1500
+            ? extrait.text.substring(0, 1500) + "[...]"
+            : extrait.text;
 
-                            if (resultat.success) {
-                                mettreAJourExtraitRaffine(tempCard, resultat.text, true);
-                                currentPassagesIA.push({
-                                    text: resultat.text,
-                                    titre: extrait.livre.titre,
-                                    auteur: extrait.livre.auteur
-                                });
-                            } else {
-                                mettreAJourExtraitRaffine(tempCard, resultat.text, false);
-                                currentPassagesIA.push({
-                                    text: resultat.text,
-                                    titre: extrait.livre.titre,
-                                    auteur: extrait.livre.auteur
-                                });
-                            }
+        mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
+        currentPassagesBruts.push({
+            text: texteCoupe,
+            titre: extrait.livre.titre,
+            auteur: extrait.livre.auteur
+        });
+    }
+}
+            console.log(`✅ Traitement terminé: ${currentPassagesIA.length} extraits raffinés`);
 
-                        } catch (err) {
-                            console.error("Erreur IA pour extrait", i, err);
-                            const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
-                            mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
-                            currentPassagesIA.push({
-                                text: texteOriginal,
-                                titre: extrait.livre.titre,
-                                auteur: extrait.livre.auteur
-                            });
-                        }
-                        // Délai important après un appel IA
-                        await new Promise(r => setTimeout(r, 5000));
-                    } else {
-                        // Mode sans IA (Raw)
-                        await new Promise(r => setTimeout(r, 1000)); // Délai esthétique court
-                        // On limite la taille du texte brut pour éviter des documents trop longs
-                        const texteCoupe = extrait.text.length > 1500
-                            ? extrait.text.substring(0, 1500) + "[...]"
-                            : extrait.text;
-
-                        mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
-                        currentPassagesBruts.push({
-                            text: texteCoupe,
-                            titre: extrait.livre.titre,
-                            auteur: extrait.livre.auteur
-                        });
-                    }
-                }
-
-                console.log(`✅ Traitement terminé: ${currentPassagesIA.length} extraits raffinés`);
-
-                // Activer le PDF
-                document.getElementById("pdf-placeholder").style.display = "none";
-                document.getElementById("pdf-ready").style.display = "block";
+// Activer le PDF
+document.getElementById("pdf-placeholder").style.display = "none";
+document.getElementById("pdf-ready").style.display = "block";
 
             } catch (e) {
                 document.getElementById("results-content").innerHTML = `
