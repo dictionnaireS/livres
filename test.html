@@ -625,7 +625,7 @@ async function startSearch() {
     const theme = document.getElementById("theme-input").value.trim();
     const mots = document.getElementById("mots-cles-input").value.trim();
 
-    document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>🔍 Recherche en cours dans les ouvrages...</p>";
+    document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>🔎 Recherche en cours dans les ouvrages...</p>";
     currentPassagesIA = [];
     currentPassagesBruts = [];
     logsIA = [];
@@ -637,20 +637,70 @@ async function startSearch() {
         selectedBooks = selectBestBooks(livres, theme, mots);
         if (selectedBooks.length < 2) throw new Error("Livres insuffisants");
 
+        // Charger et analyser les deux livres
         const book1 = await loadBookJSON(selectedBooks[0].fichier_json);
         const scores1 = analyzeBookChunks(book1, theme, mots);
 
-        if (scores1.length === 0) throw new Error("Aucun extrait pertinent");
+        const book2 = await loadBookJSON(selectedBooks[1].fichier_json);
+        const scores2 = analyzeBookChunks(book2, theme, mots);
 
-        document.getElementById("results-content").innerHTML =
-            "<div class='extrait-card'><h4 style='font-family:var(--font-serif); color:hsl(var(--accent)); margin-bottom:0.5rem;'>✓ Analyse terminée</h4></div>";
+        if (scores1.length === 0 && scores2.length === 0) {
+            throw new Error("Aucun extrait pertinent trouvé dans ces ouvrages");
+        }
 
+        // Afficher les résultats bruts (sans IA pour l'instant)
+        document.getElementById("results-content").innerHTML = "";
+        
+        // Afficher les meilleurs extraits du livre 1
+        const topScores1 = scores1.slice(0, 3);
+        topScores1.forEach((segment, idx) => {
+            afficherExtrait(book1.titre, book1.auteur, segment.text, segment.score, idx + 1);
+        });
+
+        // Afficher les meilleurs extraits du livre 2
+        const topScores2 = scores2.slice(0, 3);
+        topScores2.forEach((segment, idx) => {
+            afficherExtrait(book2.titre, book2.auteur, segment.text, segment.score, idx + 4);
+        });
+
+        // Activer le PDF
         document.getElementById("pdf-placeholder").style.display = "none";
         document.getElementById("pdf-ready").style.display = "block";
 
     } catch (e) {
         document.getElementById("results-content").innerHTML = `<p style='color:#dc2626; text-align:center;'>❌ ${e.message}</p>`;
+        console.error("Erreur:", e);
     }
+}
+
+function afficherExtrait(titre, auteur, texte, score, numero) {
+    // Limiter la longueur du texte
+    const texteAffiche = texte.length > MAX_EXTRAIT_CHARS 
+        ? texte.substring(0, MAX_EXTRAIT_CHARS) + "..." 
+        : texte;
+
+    const card = document.createElement("div");
+    card.className = "extrait-card";
+    card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.3rem; color: hsl(var(--primary)); margin-bottom: 0.3rem;">
+                    ${titre}
+                </h4>
+                <p style="font-family: var(--font-ui); font-size: 0.8rem; color: hsl(var(--accent)); text-transform: uppercase; letter-spacing: 0.05em;">
+                    ${auteur}
+                </p>
+            </div>
+            <span style="background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+                Score: ${score}
+            </span>
+        </div>
+        <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify;">
+            ${texteAffiche}
+        </p>
+    `;
+    
+    document.getElementById("results-content").appendChild(card);
 }
 
 function stopSearch() {
