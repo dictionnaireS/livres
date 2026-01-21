@@ -386,14 +386,98 @@
 
 
         const SPIRITUAL_SYNONYMS = {
-            prière: ["oraison", "méditation", "contemplation", "supplication", "intercession", "louange"],
-            oraison: ["prière", "méditation", "contemplation", "recueillement"],
-            contemplation: ["oraison", "silence intérieur", "adoration", "présence"],
-            méditation: ["réflexion", "rumination", "lectio divina"],
+            // --- FAMILLE : DIEU ET TRINITÉ ---
+            "dieu": ["seigneur", "pere", "createur", "eternel", "absolu", "divinite", "trinite", "tout-puissant", "providence", "logos", "verbe", "allah", "tawhid"],
+            "seigneur": ["dieu", "christ", "pere", "maitre", "eternel"],
+            "pere": ["dieu", "createur", "abbaseigneur", "engendreur"],
+            "christ": ["jesus", "verbe", "logos", "messie", "sauveur", "redempteur", "oint", "emmanuel", "agneau"],
+            "jesus": ["christ", "sauveur", "emmanuel", "fils de dieu"],
+            "esprit": ["paraclet", "souffle", "pneuma", "consolateur", "sanctificateur", "ame", "esprit-saint"],
+            "esprit-saint": ["esprit", "paraclet", "souffle", "pneuma", "don de dieu"],
+            "verbe": ["logos", "parole", "christ", "fils"],
+            "logos": ["verbe", "parole", "reason", "christ"],
+            "trinite": ["tri-unite", "pere-fils-esprit", "communion divine"],
+            "divinite": ["dieu", "deite", "essence divine"],
 
-            sens: ["signification", "intelligence", "interprétation"],
-            figure: ["type", "symbole", "préfiguration"],
-            accomplissement: ["réalisation", "plénitude", "perfection"]
+            // --- FAMILLE : PRIÈRE ET MYSTIQUE ---
+            "prière": ["oraison", "meditation", "contemplation", "intercession", "louange", "adoration", "supplication", "invocation", "dhikr", "psaume", "office"],
+            "priere": ["oraison", "meditation", "contemplation", "intercession", "louange", "adoration", "supplication", "invocation", "dhikr", "psaume", "office"],
+            "oraison": ["priere", "meditation", "contemplation", "coeur-a-coeur", "silence"],
+            "meditation": ["oraison", "contemplation", "reflexion", "ruminations", "lectio-divina"],
+            "contemplation": ["oraison", "meditation", "vision", "theoria", "regard", "extase", "ravissement"],
+            "adoration": ["louange", "culte", "latrie", "prosternation", "veneration"],
+            "louange": ["adoration", "action de grace", "doxologie", "hymne", "benediction"],
+            "extase": ["ravissement", "union", "sortie de soi", "levitation", "transport"],
+            "silence": ["quietude", "desert", "hesychasme", "paix", "recueillement"],
+            "hesychasme": ["silence", "paix-interieure", "priere-du-coeur"],
+            "dhikr": ["invocation", "souvenir", "priere", "soufisme"],
+
+            // --- FAMILLE : L'ÂME ET L'INTÉRIORITÉ ---
+            "ame": ["esprit", "coeur", "interieur", "psyché", "pneuma", "etincelle", "fond-de-l-ame"],
+            "coeur": ["ame", "centre", "interieur", "fond", "volonte", "affectivite", "qalb"],
+            "interieur": ["ame", "intimite", "vie-interieure", "secret", "dedans"],
+            "conscience": ["ame", "interieur", "jugement", "synderese"],
+
+            // --- FAMILLE : GRÂCE ET SALUT ---
+            "grace": ["don", "faveur", "misericorde", "secours", "benediction", "charisme", "gratuité"],
+            "don": ["grace", "faveur", "offrande", "charisme"],
+            "misericorde": ["pitie", "pardon", "clemence", "compassion", "charite", "rahma"],
+            "pardon": ["misericorde", "absolution", "remission", "reconciliation"],
+            "salut": ["redemption", "delivrance", "liberation", "justification", "vie-eternelle"],
+            "redemption": ["salut", "rachat", "sacrifice", "expiation"],
+            "providence": ["dieu", "gouvernement-divin", "volonte-de-dieu", "soin-divin"],
+
+            // --- FAMILLE : UNION ET AMOUR ---
+            "union": ["communion", "unite", "fusion", "mariage-mystique", "fana", "deification", "theose", "participation"],
+            "communion": ["union", "partage", "eucharistie", "unite", "corps-mystique"],
+            "unite": ["union", "communion", "unicite", "tawhid"],
+            "charite": ["amour", "agape", "dilection", "don-de-soi", "misericorde"],
+            "amour": ["charite", "agape", "affection", "feu", "ardeur", "unite", "eros"],
+            "agape": ["amour", "charite", "banquet", "repas-du-seigneur"],
+
+            // --- FAMILLE : VERTUS ET ASCÈSE ---
+            "vertu": ["foi", "esperance", "charite", "justice", "prudence", "force", "temperance", "perfection"],
+            "foi": ["croyance", "adhesion", "confiance", "fidelite", "dogme"],
+            "esperance": ["attente", "confiance", "desir", "espoir"],
+            "humilite": ["abaissement", "kenose", "pauvrete", "effacement", "petit-chemin"],
+            "kenose": ["humilite", "abaissement", "depouillement", "incarnation"],
+            "ascese": ["renoncement", "depouillement", "mortification", "penitence", "combat-spirituel", "effort", "jihad"],
+            "pauvrete": ["depouillement", "detachement", "humilite", "indigence"],
+            "obéissance": ["soumission", "docilite", "abandon", "ecoute", "islam"],
+            "abandon": ["confiance", "lacher-prise", "quietude", "remise-de-soi"],
+
+            // --- FAMILLE : ÉCRITURE ET ENSEIGNEMENT ---
+            "ecriture": ["bible", "parole", "evangile", "testament", "revelation", "livre", "coran"],
+            "bible": ["ecriture", "parole-de-dieu", "saintes-lettres", "livre-sacre"],
+            "evangile": ["bonne-nouvelle", "parole", "christ"],
+            "exegese": ["hermeneutique", "interpretation", "commentaire", "sens-spirituel", "tafsir"],
+            "parole": ["verbe", "logos", "ecriture", "revelation"],
+            "revelation": ["apocalypse", "manifestation", "theophanie", "epiphanie", "parole"],
+
+            // --- FAMILLE : LITURGIE ET RITES ---
+            "liturgie": ["office", "culte", "messe", "sacrement", "rituel", "celebration"],
+            "messe": ["eucharistie", "liturgie", "sacrifice", "repas", "cene"],
+            "eucharistie": ["messe", "communion", "viatique", "pain-de-vie", "hostie"],
+            "sacrement": ["signe", "mystere", "rite", "grace"],
+            "office": ["liturgie", "breviaire", "psautier", "louange"],
+
+            // --- FAMILLE : ESCHATOLOGIE (FINS DERNIÈRES) ---
+            "ciel": ["paradis", "royaume", "bienheureux", "cite-de-dieu", "eternite"],
+            "paradis": ["ciel", "eden", "beautitude", "demeure-eternelle"],
+            "mort": ["trepas", "passage", "fin", "agonie", "sommeil"],
+            "resurrection": ["vie-nouvelle", "reveil", "parousie", "immortalite"],
+            "enfer": ["gehenne", "tenebres", "damnation", "abime", "neant"],
+            "purgatoire": ["purification", "feu-purificateur", "attente"],
+            "jugement": ["sentence", "parousie", "justice-divine"],
+
+            // --- FAMILLE : PHILOSOPHIE ET LUMIÈRE ---
+            "sagesse": ["sapience", "sophia", "connaissance", "philosophie", "gnose"],
+            "connaissance": ["sagesse", "gnose", "intelligence", "vision", "lumiere", "ma-rifa"],
+            "lumiere": ["illumination", "clarte", "splendeur", "rayon", "gloire", "epiphanie"],
+            "illumination": ["lumiere", "grace", "gnose", "vision"],
+            "verite": ["absolu", "certitude", "dogme", "al-haqq"],
+            "neant": ["vide", "rien", "obscurite", "apophasme", "nuit-obscure"],
+            "apophasme": ["theologie-negative", "neant", "inconnaissance"]
         };
 
         const TYPING_SPEED_MS = 10;
@@ -715,7 +799,7 @@
                 document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>🤖 Traitement par l'IA en cours...</p>";
 
                 const topScores1 = scores1.slice(0, 3);
-                const topScores2 = scores2.slice(0, 3);
+                const topScores2 = scores2.slice(0, 2);
 
                 const allExtraits = [
                     ...topScores1.map(s => ({ ...s, livre: book1 })),
@@ -739,33 +823,36 @@
                         i + 1
                     );
 
-                    // Appeler l'IA pour raffiner l'extrait
-                    try {
-                        const resultat = await raffinerExtraitAvecIA(
-                            extrait.text,
-                            theme,
-                            mots,
-                            extrait.livre.titre
-                        );
+                    // LOGIQUE HYBRIDE : 2 premiers avec IA, les suivants sans IA
+                    if (i < 2) {
+                        try {
+                            const resultat = await raffinerExtraitAvecIA(
+                                extrait.text,
+                                theme,
+                                mots,
+                                extrait.livre.titre
+                            );
 
-                        if (resultat.success) {
-                            // Mise à jour avec la version raffinée
-                            mettreAJourExtraitRaffine(tempCard, resultat.text, true);
-                            currentPassagesIA.push(resultat.text);
-                        } else {
-                            // Afficher le texte original sans marquer comme raffiné
-                            mettreAJourExtraitRaffine(tempCard, resultat.text, false);
+                            if (resultat.success) {
+                                mettreAJourExtraitRaffine(tempCard, resultat.text, true);
+                                currentPassagesIA.push(resultat.text);
+                            } else {
+                                mettreAJourExtraitRaffine(tempCard, resultat.text, false);
+                            }
+
+                        } catch (err) {
+                            console.error("Erreur IA pour extrait", i, err);
+                            const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
+                            mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
                         }
-
-                    } catch (err) {
-                        console.error("Erreur IA pour extrait", i, err);
-                        // Afficher le texte original en cas d'erreur
-                        const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
-                        mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
+                        // Délai important après un appel IA
+                        await new Promise(r => setTimeout(r, 5000));
+                    } else {
+                        // Mode sans IA (Raw)
+                        await new Promise(r => setTimeout(r, 1000)); // Délai esthétique court
+                        mettreAJourExtraitRaffine(tempCard, extrait.text, 'raw');
+                        currentPassagesBruts.push(extrait.text);
                     }
-
-                    // Délai pour éviter le rate limiting (429)
-                    await new Promise(r => setTimeout(r, 5000));
                 }
 
                 console.log(`✅ Traitement terminé: ${currentPassagesIA.length} extraits raffinés`);
@@ -818,16 +905,23 @@
             return card;
         }
 
-        function mettreAJourExtraitRaffine(card, texteRaffine, estRaffineParIA = true) {
+        function mettreAJourExtraitRaffine(card, texteRaffine, type = true) {
             const content = card.querySelector(".extrait-content");
 
-            const badge = estRaffineParIA
-                ? `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--accent));">
+            let badge = "";
+            if (type === true) {
+                badge = `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--accent));">
             ✨ Extrait raffiné par IA
-           </div>`
-                : `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: #dc2626;">
+           </div>`;
+            } else if (type === 'raw') {
+                badge = `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--foreground)); opacity: 0.7;">
+            📄 Extrait original (Non traité par IA)
+           </div>`;
+            } else {
+                badge = `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: #dc2626;">
             ⚠️ Extrait brut (API IA indisponible)
            </div>`;
+            }
 
             content.innerHTML = `
         <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify;">
@@ -914,6 +1008,50 @@ Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
                 success: false,
                 text: texte.substring(0, MAX_EXTRAIT_CHARS)
             };
+        }
+
+        function downloadPDF() {
+            const theme = document.getElementById('theme-input').value;
+            const mots = document.getElementById('mots-cles-input').value;
+
+            const pdfContent = [];
+
+            // Titre global
+            pdfContent.push({ text: 'Bibliothèque Littéraire - Recueil', style: 'header' });
+            pdfContent.push({ text: `Recherche : ${theme} / ${mots}`, style: 'subheader' });
+            pdfContent.push({ text: '\n' });
+
+            // Extraits IA
+            currentPassagesIA.forEach((txt, i) => {
+                pdfContent.push({ text: `Extrait choisi #${i + 1} (Raffiné par IA)`, style: 'title' });
+                pdfContent.push({ text: txt, style: 'body' });
+                pdfContent.push({ text: '\n\n' });
+            });
+
+            // Extraits Bruts
+            currentPassagesBruts.forEach((txt, i) => {
+                pdfContent.push({ text: `Extrait brut #${i + 1}`, style: 'title' });
+                pdfContent.push({ text: txt, style: 'body' });
+                pdfContent.push({ text: '\n\n' });
+            });
+
+            if (pdfContent.length < 4) {
+                alert("Aucun extrait disponible pour le moment.");
+                return;
+            }
+
+            const docDefinition = {
+                content: pdfContent,
+                styles: {
+                    header: { fontSize: 24, bold: true, alignment: 'center', margin: [0, 0, 0, 10], color: '#1c2541' },
+                    subheader: { fontSize: 12, italics: true, alignment: 'center', color: '#d4af37', margin: [0, 0, 0, 20] },
+                    title: { fontSize: 14, bold: true, color: '#1c2541', margin: [0, 10, 0, 5] },
+                    body: { fontSize: 11, lineHeight: 1.5, alignment: 'justify', font: 'Roboto' }
+                },
+                defaultStyle: { font: 'Roboto' }
+            };
+
+            pdfMake.createPdf(docDefinition).download('recueil_extraits.pdf');
         }
 
     </script>
