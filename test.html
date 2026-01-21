@@ -809,76 +809,73 @@
                 // Traiter chaque extrait avec l'IA
                 document.getElementById("results-content").innerHTML = "";
 
-                // 1. AFFICHER TOUS LES EXTRAITS BRUTS IMMÉDIATEMENT
-                const cards = [];
                 for (let i = 0; i < allExtraits.length; i++) {
+                    if (isStopped) break;
+
                     const extrait = allExtraits[i];
 
-                    const isIA = i < 2;
-                    const status = isIA ? "analyzing" : "raw";
-
-                    const card = afficherExtraitImmediat(
+                    // Afficher d'abord la version brute
+                    const tempCard = afficherExtraitAvecChargement(
                         extrait.livre.titre,
                         extrait.livre.auteur,
                         extrait.text,
                         extrait.score,
-                        i + 1,
-                        status
+                        i + 1
                     );
-                    cards.push({ card, extrait, index: i });
 
-                    await new Promise(r => setTimeout(r, 600));
+                    // LOGIQUE HYBRIDE : 2 premiers avec IA, les suivants sans IA
+                    if (i < 2) {
+                        try {
+                            const resultat = await raffinerExtraitAvecIA(
+                                extrait.text,
+                                theme,
+                                mots,
+                                extrait.livre.titre
+                            );
 
-                    if (!isIA) {
+                            if (resultat.success) {
+                                mettreAJourExtraitRaffine(tempCard, resultat.text, true);
+                                currentPassagesIA.push({
+                                    text: resultat.text,
+                                    titre: extrait.livre.titre,
+                                    auteur: extrait.livre.auteur
+                                });
+                            } else {
+                                mettreAJourExtraitRaffine(tempCard, resultat.text, false);
+                                currentPassagesIA.push({
+                                    text: resultat.text,
+                                    titre: extrait.livre.titre,
+                                    auteur: extrait.livre.auteur
+                                });
+                            }
+
+                        } catch (err) {
+                            console.error("Erreur IA pour extrait", i, err);
+                            const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
+                            mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
+                            currentPassagesIA.push({
+                                text: texteOriginal,
+                                titre: extrait.livre.titre,
+                                auteur: extrait.livre.auteur
+                            });
+                        }
+                        // Délai important après un appel IA
+                        await new Promise(r => setTimeout(r, 5000));
+                    } else {
+                        // Mode sans IA (Raw)
+                        await new Promise(r => setTimeout(r, 1000)); // Délai esthétique court
+                        // On limite la taille du texte brut pour éviter des documents trop longs
                         const texteCoupe = extrait.text.length > 1500
                             ? extrait.text.substring(0, 1500) + "[...]"
                             : extrait.text;
 
+                        mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
                         currentPassagesBruts.push({
                             text: texteCoupe,
                             titre: extrait.livre.titre,
                             auteur: extrait.livre.auteur
                         });
                     }
-                }
-
-                // 2. RAFFINER LES 2 PREMIERS EN ARRIÈRE-PLAN
-                for (let i = 0; i < 2; i++) {
-                    if (isStopped) break;
-
-                    const { card, extrait } = cards[i];
-
-                    try {
-                        await new Promise(r => setTimeout(r, 1000));
-
-                        const resultat = await raffinerExtraitAvecIA(
-                            extrait.text,
-                            theme,
-                            mots,
-                            extrait.livre.titre
-                        );
-
-                        const finalObject = {
-                            text: resultat.success ? resultat.text : resultat.text || extrait.text.substring(0, MAX_EXTRAIT_CHARS),
-                            titre: extrait.livre.titre,
-                            auteur: extrait.livre.auteur
-                        };
-
-                        mettreAJourExtraitRaffine(card, finalObject.text, resultat.success);
-                        currentPassagesIA.push(finalObject);
-
-                    } catch (err) {
-                        console.error("Erreur IA pour extrait", i, err);
-                        const fallbackText = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
-                        mettreAJourExtraitRaffine(card, fallbackText, false);
-                        currentPassagesIA.push({
-                            text: fallbackText,
-                            titre: extrait.livre.titre,
-                            auteur: extrait.livre.auteur
-                        });
-                    }
-
-                    await new Promise(r => setTimeout(r, 4000));
                 }
 
                 console.log(`✅ Traitement terminé: ${currentPassagesIA.length} extraits raffinés`);
@@ -895,88 +892,35 @@
             </div>
         `;
                 console.error("❌ Erreur complète:", e);
-
             }
-
         }
 
-        function afficherExtraitImmediat(titre, auteur, texteBrut, score, numero, status) {
+        function afficherExtraitAvecChargement(titre, auteur, texte, score, numero) {
+            const texteAffiche = texte.length > MAX_EXTRAIT_CHARS
+                ? texte.substring(0, MAX_EXTRAIT_CHARS) + "..."
+                : texte;
+
             const card = document.createElement("div");
             card.className = "extrait-card";
-
-            let badge = "";
-            let overlay = "";
-
-            if (status === "analyzing") {
-                badge = `<span style="background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem;">🤖 Analyse IA...</span>`;
-                overlay = `
-                <div class="loading-overlay" style="margin-bottom: 1rem; padding: 0.5rem; background: hsl(var(--accent)/0.05); border-left: 3px solid hsl(var(--accent)); font-size: 0.8rem; color: hsl(var(--accent));">
-                    ⏳ Raffinement en cours... Le texte ci-dessous est la version brute (sera remplacée).
-                </div>`;
-            } else {
-                badge = `<span style="background: hsl(var(--foreground) / 0.1); color: hsl(var(--foreground)); opacity:0.7; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem;">📄 Original</span>`;
-            }
-
             card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
             <div>
                 <h4 style="font-family: var(--font-serif); font-size: 1.3rem; color: hsl(var(--primary)); margin-bottom: 0.3rem;">
-                    ${titre} # ${numero}
+                    ${titre}
                 </h4>
                 <p style="font-family: var(--font-ui); font-size: 0.8rem; color: hsl(var(--accent)); text-transform: uppercase; letter-spacing: 0.05em;">
                     ${auteur}
                 </p>
             </div>
-            <div style="text-align:right;">
-                <span style="display:block; font-weight:bold; color: hsl(var(--primary)); opacity:0.6;">Score: ${score}</span>
-                ${badge}
-            </div>
+            <span style="background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+                Score: ${score}
+            </span>
         </div>
         <div class="extrait-content">
-            ${overlay}
-            <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify; white-space: pre-wrap;">${texteBrut}</p>
-        </div>
-    `;
-
-            document.getElementById("results-content").appendChild(card);
-            return card;
-        }
-
-        function afficherExtraitImmediat(titre, auteur, texteBrut, score, numero, status) {
-            const card = document.createElement("div");
-            card.className = "extrait-card";
-
-            let badge = "";
-            let overlay = "";
-
-            if (status === "analyzing") {
-                badge = `<span style="background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem;">🤖 Analyse IA...</span>`;
-                overlay = `
-                <div class="loading-overlay" style="margin-bottom: 1rem; padding: 0.5rem; background: hsl(var(--accent)/0.05); border-left: 3px solid hsl(var(--accent)); font-size: 0.8rem; color: hsl(var(--accent));">
-                    ⏳ Raffinement en cours... Le texte ci-dessous est la version brute.
-                </div>`;
-            } else {
-                badge = `<span style="background: hsl(var(--foreground) / 0.1); color: hsl(var(--foreground)); opacity:0.7; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem;">📄 Original</span>`;
-            }
-
-            card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-            <div>
-                <h4 style="font-family: var(--font-serif); font-size: 1.3rem; color: hsl(var(--primary)); margin-bottom: 0.3rem;">
-                    ${titre} # ${numero}
-                </h4>
-                <p style="font-family: var(--font-ui); font-size: 0.8rem; color: hsl(var(--accent)); text-transform: uppercase; letter-spacing: 0.05em;">
-                    ${auteur}
-                </p>
+            <div class="loading-ia" style="text-align: center; padding: 2rem; color: hsl(var(--accent));">
+                <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid hsl(var(--accent) / 0.3); border-top-color: hsl(var(--accent)); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">🤖 Raffinement par l'IA...</p>
             </div>
-            <div style="text-align:right;">
-                <span style="display:block; font-weight:bold; color: hsl(var(--primary)); opacity:0.6;">Score: ${score}</span>
-                ${badge}
-            </div>
-        </div>
-        <div class="extrait-content">
-            ${overlay}
-            <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify; white-space: pre-wrap;">${texteBrut}</p>
         </div>
     `;
 
