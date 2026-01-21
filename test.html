@@ -944,18 +944,19 @@
 
         async function raffinerExtraitAvecIA(texte, theme, mots, titreLivre) {
             const prompt = `Tu es un expert en littérature spirituelle. Voici un extrait du livre "${titreLivre}".
+            
+EXTRAIT BRUT :
+${texte}
 
-EXTRAIT :
-${texte.substring(0, 2000)}
+CONSIGNES STRICTES :
+1. Recherche dans cet extrait le passage spécifique qui traite du thème "${theme}" et des mots-clés "${mots}".
+2. Ta réponse doit être UNIQUEMENT l'extrait exact tiré du texte ci-dessus.
+3. INTERDICTION de résumer, de transformer, d'ajouter des concepts ou de faire des analyses.
+4. Tu dois couper l'extrait là où le sujet se termine, pour ne garder que la partie pertinente.
+5. Ne commence pas ta réponse par "Voici l'extrait" ou quoi que ce soit d'autre. Réponds uniquement par le texte brut du passage sélectionné.
+6. Ne change pas un seul mot, respecte la ponctuation originale.
 
-TÂCHE : Analyse cet extrait en rapport avec le thème "${theme}" et les mots-clés "${mots}".
-
-Fournis :
-1. Un résumé concis (2-3 phrases) qui capture l'essentiel
-2. Les concepts clés présents
-3. Une citation marquante de l'extrait (si pertinente)
-
-Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
+Si aucun passage n'est vraiment pertinent, renvoie simplement les 500 premiers caractères de l'extrait brut.`;
 
             let lastError = null;
 
@@ -970,8 +971,8 @@ Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
                         body: JSON.stringify({
                             model: model,
                             prompt: prompt,
-                            max_tokens: 800,
-                            temperature: 0.3
+                            max_tokens: 2000,
+                            temperature: 0.1
                         })
                     });
 
