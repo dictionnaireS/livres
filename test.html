@@ -665,26 +665,58 @@ async function startSearch() {
             throw new Error("Aucun extrait pertinent trouvé dans ces ouvrages. Essayez d'autres mots-clés.");
         }
 
-        // Afficher les résultats bruts (sans IA pour l'instant)
+        // Préparer les extraits pour l'IA
+        document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>🤖 Traitement par l'IA en cours...</p>";
+        
+        const topScores1 = scores1.slice(0, 3);
+        const topScores2 = scores2.slice(0, 3);
+        
+        const allExtraits = [
+            ...topScores1.map(s => ({ ...s, livre: book1 })),
+            ...topScores2.map(s => ({ ...s, livre: book2 }))
+        ];
+
+        // Traiter chaque extrait avec l'IA
         document.getElementById("results-content").innerHTML = "";
         
-        // Afficher les meilleurs extraits du livre 1
-        const topScores1 = scores1.slice(0, 3);
-        if (topScores1.length > 0) {
-            topScores1.forEach((segment, idx) => {
-                afficherExtrait(book1.titre, book1.auteur, segment.text, segment.score, idx + 1);
-            });
+        for (let i = 0; i < allExtraits.length; i++) {
+            if (isStopped) break;
+            
+            const extrait = allExtraits[i];
+            
+            // Afficher d'abord la version brute
+            const tempCard = afficherExtraitAvecChargement(
+                extrait.livre.titre, 
+                extrait.livre.auteur, 
+                extrait.text, 
+                extrait.score, 
+                i + 1
+            );
+            
+            // Appeler l'IA pour raffiner l'extrait
+            try {
+                const extraitRaffine = await raffinerExtraitAvecIA(
+                    extrait.text, 
+                    theme, 
+                    mots, 
+                    extrait.livre.titre
+                );
+                
+                // Mettre à jour avec la version raffinée
+                mettreAJourExtraitRaffine(tempCard, extraitRaffine);
+                currentPassagesIA.push(extraitRaffine);
+                
+            } catch (err) {
+                console.error("Erreur IA pour extrait", i, err);
+                // Garder la version brute si l'IA échoue
+                marquerExtraitErreur(tempCard);
+            }
+            
+            // Petit délai entre chaque appel
+            await new Promise(r => setTimeout(r, 500));
         }
 
-        // Afficher les meilleurs extraits du livre 2
-        const topScores2 = scores2.slice(0, 3);
-        if (topScores2.length > 0) {
-            topScores2.forEach((segment, idx) => {
-                afficherExtrait(book2.titre, book2.auteur, segment.text, segment.score, idx + 4);
-            });
-        }
-
-        console.log(`✅ Affichage terminé: ${topScores1.length + topScores2.length} extraits`);
+        console.log(`✅ Traitement terminé: ${currentPassagesIA.length} extraits raffinés`);
 
         // Activer le PDF
         document.getElementById("pdf-placeholder").style.display = "none";
@@ -701,8 +733,7 @@ async function startSearch() {
     }
 }
 
-function afficherExtrait(titre, auteur, texte, score, numero) {
-    // Limiter la longueur du texte
+function afficherExtraitAvecChargement(titre, auteur, texte, score, numero) {
     const texteAffiche = texte.length > MAX_EXTRAIT_CHARS 
         ? texte.substring(0, MAX_EXTRAIT_CHARS) + "..." 
         : texte;
@@ -723,10 +754,99 @@ function afficherExtrait(titre, auteur, texte, score, numero) {
                 Score: ${score}
             </span>
         </div>
-        <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify;">
-            ${texteAffiche}
-        </p>
+        <div class="extrait-content">
+            <div class="loading-ia" style="text-align: center; padding: 2rem; color: hsl(var(--accent));">
+                <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid hsl(var(--accent) / 0.3); border-top-color: hsl(var(--accent)); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">🤖 Raffinement par l'IA...</p>
+            </div>
+        </div>
     `;
     
     document.getElementById("results-content").appendChild(card);
+    return card;
 }
+
+function mettreAJourExtraitRaffine(card, texteRaffine) {
+    const content = card.querySelector(".extrait-content");
+    content.innerHTML = `
+        <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify;">
+            ${texteRaffine}
+        </p>
+        <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--accent));">
+            ✨ Extrait raffiné par IA
+        </div>
+    `;
+}
+
+function marquerExtraitErreur(card) {
+    const loadingDiv = card.querySelector(".loading-ia");
+    if (loadingDiv) {
+        loadingDiv.innerHTML = `
+            <p style="color: #dc2626; font-size: 0.9rem;">⚠️ Erreur de traitement IA - Extrait brut conservé</p>
+        `;
+    }
+}
+
+async function raffinerExtraitAvecIA(texte, theme, mots, titreLivre) {
+    const prompt = `Tu es un expert en littérature spirituelle. Voici un extrait du livre "${titreLivre}".
+
+EXTRAIT :
+${texte.substring(0, 2000)}
+
+TÂCHE : Analyse cet extrait en rapport avec le thème "${theme}" et les mots-clés "${mots}".
+
+Fournis :
+1. Un résumé concis (2-3 phrases) qui capture l'essentiel
+2. Les concepts clés présents
+3. Une citation marquante de l'extrait (si pertinente)
+
+Sois concis, précis et centré sur la dimension spirituelle/théologique.`;
+
+    // Essayer d'abord HuggingFace
+    try {
+        const response = await fetch(HF_PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ inputs: prompt })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.generated_text || data[0]?.generated_text || texte;
+        }
+    } catch (e) {
+        console.log("HF échoué, essai OpenRouter...");
+    }
+
+    // Fallback sur OpenRouter
+    try {
+        const model = OPENROUTER_MODELS[0];
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "HTTP-Referer": window.location.href
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [{ role: "user", content: prompt }],
+                max_tokens: 500
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.choices?.[0]?.message?.content || texte;
+        }
+    } catch (e) {
+        console.error("Erreur OpenRouter:", e);
+    }
+
+    // Si tout échoue, retourner le texte original
+    return texte.substring(0, MAX_EXTRAIT_CHARS);
+}
+
+</script>
+
+</body>
+</html>
