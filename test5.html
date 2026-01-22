@@ -407,12 +407,12 @@
                     </li>
                     <li style="margin-top: 1.5rem; border-top: 2px solid hsl(var(--accent) / 0.3); padding-top: 1rem;">
                         <button id="search-no-ia-btn" class="btn"
-                            style="background-color: hsl(var(--accent)); color: white; width: 100%; font-size: 0.75rem; transition: all 0.2s;"
+                            style="background-color: white; color: hsl(var(--accent)); border: 2px solid hsl(var(--accent)); width: 100%; font-size: 0.75rem; transition: all 0.2s;"
                             disabled onclick="toggleIAMode()">
-                            ⚡ Activer Mode Sans IA
+                            ✨ Activer l'Analyse IA
                         </button>
                         <div id="no-ia-status"
-                            style="display:none; text-align:center; margin-top:0.5rem; color:hsl(var(--accent)); font-weight:700; font-size:0.75rem;">
+                            style="text-align:center; margin-top:0.5rem; color:hsl(var(--accent)); font-weight:700; font-size:0.75rem;">
                             Mode Sans IA sélectionné
                         </div>
                         <p
@@ -448,8 +448,8 @@
                 </div>
                 <div class="search-actions"
                     style="display: grid; grid-template-columns: 3fr 1fr; gap: 1rem; margin-top: 1rem;">
-                    <button id="search-btn" class="btn btn-primary" disabled onclick="startSearch()">🚀 Lancer la
-                        Recherche (IA)</button>
+                    <button id="search-btn" class="btn btn-primary" disabled onclick="startSearch()">⚡ Lancer la
+                        Recherche (SANS IA)</button>
                     <button id="stop-btn" class="btn btn-stop" onclick="stopSearch()">🛑 Arrêter</button>
                 </div>
             </div>
@@ -597,7 +597,7 @@
 
         const TYPING_SPEED_MS = 10;
         const CHARS_PER_TICK = 10;
-        const MAX_EXTRAIT_CHARS = 1000;//au lieu de 1500
+        const MAX_EXTRAIT_CHARS = 2000;// augmenté de 1000 à 2000 pour plus de texte sans IA
         const MAX_SEGMENT_SOURCE_CHARS = 6000;
         const API_TIMEOUT_MS = 45000;
         const API_RETRY_DELAY_MS = 5000;
@@ -611,7 +611,7 @@
         let selectedBooks = [];
         let logsIA = [];
         let isStopped = false;
-        let useIA = true; // Mode par défaut avec IA
+        let useIA = false; // Mode par défaut Sans IA
 
         /* =======================
            CITATIONS - CORRECTION DE LA SYNTAXE
@@ -728,16 +728,18 @@
                 btnNoIa.style.backgroundColor = "white";
                 btnNoIa.style.color = "hsl(var(--accent))";
                 btnNoIa.style.border = "2px solid hsl(var(--accent))";
-                btnNoIa.innerHTML = "✅ Mode SANS IA sélectionné";
+                btnNoIa.innerHTML = "✨ Activer l'Analyse IA";
                 statusLabel.style.display = "block";
+                statusLabel.innerHTML = "Mode Sans IA sélectionné";
                 btnMain.innerHTML = "⚡ Lancer la Recherche (SANS IA)";
             } else {
-                // Mode AVEC IA (par défaut)
+                // Mode AVEC IA
                 btnNoIa.style.backgroundColor = "hsl(var(--accent))";
                 btnNoIa.style.color = "white";
                 btnNoIa.style.border = "none";
-                btnNoIa.innerHTML = "⚡ Recherche Rapide (Sans IA)";
-                statusLabel.style.display = "none";
+                btnNoIa.innerHTML = "⚡ Revenir au Mode Sans IA";
+                statusLabel.style.display = "block";
+                statusLabel.innerHTML = "Mode IA activé";
                 btnMain.innerHTML = "🚀 Lancer la Recherche (IA)";
             }
         }
@@ -1063,8 +1065,8 @@
                     } else {
                         // Mode sans IA (Raw)
                         if (!forceNoIA) await new Promise(r => setTimeout(r, 1000));
-                        const texteCoupe = extrait.text.length > 1500
-                            ? extrait.text.substring(0, 1500) + "[...]"
+                        const texteCoupe = extrait.text.length > 3000
+                            ? extrait.text.substring(0, 3000) + "[...]"
                             : extrait.text;
 
                         mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
@@ -1206,7 +1208,7 @@ SOURCE TEXT:
 
 TASK 1: Provide a SHORT historical and theological presentation context (40-60 words) in French explaining the significance of this text/author.
 
-TASK 2: EXTRACT the most spiritually dense passage (200-800 words) that:
+TASK 2: EXTRACT the most spiritually dense passage (150-400 words) that:
 - Contains direct spiritual teachings, mystical insights, or theological concepts
 - References prayer, contemplation, divine union, grace, or salvation
 - Includes scripture citations or saint/mystic experiences
