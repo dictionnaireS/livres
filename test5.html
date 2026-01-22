@@ -103,11 +103,11 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1500px;
             margin: -2.5rem auto 4rem;
             padding: 0 1.5rem;
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 280px 1fr;
             gap: 2.5rem;
             position: relative;
             z-index: 10;
@@ -220,7 +220,7 @@
 
         .results-grid {
             display: grid;
-            grid-template-columns: 1fr 280px;
+            grid-template-columns: 1fr 260px;
             gap: 2.5rem;
             margin-top: 2.5rem;
         }
@@ -302,6 +302,71 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
+        /* --- RESPONSIVITÉ SMARTPHONE & TABLETTE --- */
+        @media (max-width: 768px) {
+            header {
+                padding: 3rem 1rem;
+            }
+
+            header h1 {
+                font-size: clamp(2rem, 10vw, 3rem);
+            }
+
+            .container {
+                margin: 1rem auto;
+                padding: 0 1rem;
+                gap: 1.5rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .search-fields {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+
+            .search-actions {
+                grid-template-columns: 1.5fr 1fr !important;
+            }
+
+            .extrait-card {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 2.5rem 1rem;
+            }
+
+            header p {
+                font-size: 0.75rem;
+                letter-spacing: 0.2em;
+            }
+
+            .search-actions {
+                grid-template-columns: 1fr !important;
+            }
+
+            .search-actions .btn {
+                padding: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .extrait-card {
+                padding: 1.25rem;
+            }
+
+            .extrait-card h4 {
+                font-size: 1.15rem !important;
+            }
+        }
     </style>
 </head>
 
@@ -336,9 +401,25 @@
                         <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">03.</span>
                         <b>ANALYSE :</b> L'IA sélectionne 2 livres pertinents ( attente possible jusqu'à 2mn )
                     </li>
-                    <li>
+                    <li style="margin-bottom: 1.2rem;">
                         <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">04.</span>
                         <b>ANALYSE :</b> 5 passages sont extraits, possibilité de produire un fichier au format PDF.
+                    </li>
+                    <li style="margin-top: 1.5rem; border-top: 2px solid hsl(var(--accent) / 0.3); padding-top: 1rem;">
+                        <button id="search-no-ia-btn" class="btn"
+                            style="background-color: hsl(var(--accent)); color: white; width: 100%; font-size: 0.75rem; transition: all 0.2s;"
+                            disabled onclick="toggleIAMode()">
+                            ⚡ Activer Mode Sans IA
+                        </button>
+                        <div id="no-ia-status"
+                            style="display:none; text-align:center; margin-top:0.5rem; color:hsl(var(--accent)); font-weight:700; font-size:0.75rem;">
+                            Mode Sans IA sélectionné
+                        </div>
+                        <p
+                            style="font-size: 0.7rem; margin-top: 0.5rem; opacity: 0.7; font-style: italic; text-align: center;">
+                            Utilisez ce bouton pour choisir entre une analyse IA ou une extraction brute avant de Lancer
+                            la Recherche.
+                        </p>
                     </li>
                 </ul>
             </div><br><br>
@@ -355,7 +436,7 @@
 
         <main>
             <div class="card" style="border-top: 4px solid hsl(var(--primary));">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="search-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                     <div class="input-group">
                         <label for="theme-input">Thématique</label>
                         <input type="text" id="theme-input" placeholder="Ex: Oraison, Contemplation...">
@@ -365,9 +446,10 @@
                         <input type="text" id="mots-cles-input" placeholder="Ex: grâce, union, silence...">
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 1rem; margin-top: 1rem;">
+                <div class="search-actions"
+                    style="display: grid; grid-template-columns: 3fr 1fr; gap: 1rem; margin-top: 1rem;">
                     <button id="search-btn" class="btn btn-primary" disabled onclick="startSearch()">🚀 Lancer la
-                        Recherche</button>
+                        Recherche (IA)</button>
                     <button id="stop-btn" class="btn btn-stop" onclick="stopSearch()">🛑 Arrêter</button>
                 </div>
             </div>
@@ -529,6 +611,7 @@
         let selectedBooks = [];
         let logsIA = [];
         let isStopped = false;
+        let useIA = true; // Mode par défaut avec IA
 
         /* =======================
            CITATIONS - CORRECTION DE LA SYNTAXE
@@ -618,6 +701,7 @@
             const theme = document.getElementById("theme-input").value.trim();
             const mots = document.getElementById("mots-cles-input").value.trim();
             const btn = document.getElementById("search-btn");
+            const btnNoIa = document.getElementById("search-no-ia-btn");
 
             const motsArray = mots
                 .split(/[,]+/)
@@ -630,11 +714,33 @@
                 (theme.length === 0 && motsArray.length >= 2);
 
             btn.disabled = !isValid;
+            if (btnNoIa) btnNoIa.disabled = !isValid;
         }
 
-        /* =======================
-           OUTILS TEXTE
-        ======================= */
+        function toggleIAMode() {
+            useIA = !useIA;
+            const btnNoIa = document.getElementById("search-no-ia-btn");
+            const btnMain = document.getElementById("search-btn");
+            const statusLabel = document.getElementById("no-ia-status");
+
+            if (!useIA) {
+                // Mode SANS IA activé
+                btnNoIa.style.backgroundColor = "white";
+                btnNoIa.style.color = "hsl(var(--accent))";
+                btnNoIa.style.border = "2px solid hsl(var(--accent))";
+                btnNoIa.innerHTML = "✅ Mode SANS IA sélectionné";
+                statusLabel.style.display = "block";
+                btnMain.innerHTML = "⚡ Lancer la Recherche (SANS IA)";
+            } else {
+                // Mode AVEC IA (par défaut)
+                btnNoIa.style.backgroundColor = "hsl(var(--accent))";
+                btnNoIa.style.color = "white";
+                btnNoIa.style.border = "none";
+                btnNoIa.innerHTML = "⚡ Recherche Rapide (Sans IA)";
+                statusLabel.style.display = "none";
+                btnMain.innerHTML = "🚀 Lancer la Recherche (IA)";
+            }
+        }
 
         function expandSynonyms(words) {
             let expanded = [...words];
@@ -812,11 +918,41 @@
         ======================= */
 
         async function startSearch() {
+            const forceNoIA = !useIA;
             isStopped = false;
             const theme = document.getElementById("theme-input").value.trim();
             const mots = document.getElementById("mots-cles-input").value.trim();
+            const resultsTitle = document.querySelector(".section-title");
 
-            document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>🔎 Recherche en cours dans les ouvrages...</p>";
+            // Désactiver les boutons pendant la recherche
+            document.getElementById("search-btn").disabled = true;
+            document.getElementById("search-no-ia-btn").disabled = true;
+
+            if (forceNoIA) {
+                resultsTitle.innerHTML = "⚡ Résultats : Recherche Rapide (Sans IA)";
+                resultsTitle.style.color = "hsl(var(--accent))";
+                resultsTitle.style.borderBottomColor = "hsl(var(--accent))";
+
+                document.getElementById("results-content").innerHTML = `
+                    <div style="text-align:center; padding: 3rem; background: hsl(var(--accent) / 0.05); border-radius: var(--radius); border: 1px dashed hsl(var(--accent));">
+                        <p style='color:hsl(var(--accent)); font-weight:bold; font-size: 1.2rem;'>⚡ Mode Rapide Activé</p>
+                        <p id="search-status-step" style='margin-top:0.5rem; opacity:0.8;'>Extraction directe des textes originaux...</p>
+                    </div>`;
+            } else {
+                resultsTitle.innerHTML = "📊 Résultats : Recherche avec IA";
+                resultsTitle.style.color = "hsl(var(--primary))";
+                resultsTitle.style.borderBottomColor = "hsl(var(--primary))";
+                document.getElementById("no-ia-status").style.display = "none";
+                document.getElementById("search-no-ia-btn").style.transform = "none";
+                document.getElementById("search-no-ia-btn").style.opacity = "1";
+
+                document.getElementById("results-content").innerHTML = `
+                    <div style="text-align:center; padding: 3rem; background: hsl(var(--primary) / 0.03); border-radius: var(--radius); border: 1px dashed hsl(var(--primary) / 0.2);">
+                        <p style='color:hsl(var(--primary)); font-weight:bold; font-size: 1.2rem;'>🔎 Recherche avec IA</p>
+                        <p id="search-status-step" style='margin-top:0.5rem; opacity:0.8;'>L'intelligence artificielle analyse et raffine les textes...</p>
+                    </div>`;
+            }
+
             currentPassagesIA = [];
             currentPassagesBruts = [];
             logsIA = [];
@@ -836,19 +972,20 @@
                 }
 
                 // Charger et analyser les deux livres
-                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Chargement du premier livre...</p>";
+                const statusStep = document.getElementById("search-status-step");
+                if (statusStep) statusStep.innerText = "📖 Chargement du premier livre...";
                 const book1 = await loadBookJSON(selectedBooks[0].fichier_json);
                 console.log(`✅ Livre 1 chargé: ${book1.chunks.length} segments`);
 
-                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Analyse du premier livre...</p>";
+                if (statusStep) statusStep.innerText = "📖 Analyse du premier livre...";
                 const scores1 = analyzeBookChunks(book1, theme, mots);
                 console.log(`📊 Livre 1: ${scores1.length} extraits pertinents trouvés`);
 
-                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Chargement du second livre...</p>";
+                if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Lecture' : 'Analyse'} du second livre...`;
                 const book2 = await loadBookJSON(selectedBooks[1].fichier_json);
                 console.log(`✅ Livre 2 chargé: ${book2.chunks.length} segments`);
 
-                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Analyse du second livre...</p>";
+                if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Extraction' : 'Analyse'} des passages...`;
                 const scores2 = analyzeBookChunks(book2, theme, mots);
                 console.log(`📊 Livre 2: ${scores2.length} extraits pertinents trouvés`);
 
@@ -882,8 +1019,8 @@
                         i + 1
                     );
 
-                    // LOGIQUE HYBRIDE : 3 premiers SANS IA, 2 derniers AVEC IA
-                    if (i >= 3) {
+                    // LOGIQUE HYBRIDE : 3 premiers SANS IA, 2 derniers AVEC IA (sauf si forceNoIA)
+                    if (i >= 3 && !forceNoIA) {
                         // Mode AVEC IA (les 2 derniers)
                         try {
                             const resultat = await raffinerExtraitAvecIA(
@@ -924,8 +1061,8 @@
                         // Délai important après un appel IA
                         await new Promise(r => setTimeout(r, 5000));
                     } else {
-                        // Mode sans IA (Raw) - les 3 premiers
-                        await new Promise(r => setTimeout(r, 1000));
+                        // Mode sans IA (Raw)
+                        if (!forceNoIA) await new Promise(r => setTimeout(r, 1000));
                         const texteCoupe = extrait.text.length > 1500
                             ? extrait.text.substring(0, 1500) + "[...]"
                             : extrait.text;
@@ -1011,14 +1148,14 @@
 
             let contextHtml = "";
             if (context) {
-                contextHtml = `<div style="margin-bottom: 1.2rem; padding: 1rem; background: hsl(var(--background)); border-left: 3px solid hsl(var(--accent)); font-family: var(--font-body); font-style: italic; font-size: 0.9rem; color: hsl(var(--foreground) / 0.8);">
-                    <strong>Contexte :</strong> ${context}
+                contextHtml = `<div style="margin-bottom: 1.5rem; padding: 1.25rem; background: hsl(var(--background)); border-left: 4px solid hsl(var(--accent)); font-family: var(--font-body); font-style: italic; font-size: 1rem; color: hsl(var(--foreground) / 0.85);">
+                    <strong style="color: hsl(var(--accent));">Contexte historique & théologique :</strong><br>${context}
                 </div>`;
             }
 
             content.innerHTML = `
         ${contextHtml}
-        <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify;">
+        <p style="font-size: 1.05rem; line-height: 1.8; color: hsl(var(--foreground)); text-align: justify;">
             ${texteRaffine}
         </p>
         ${badge}
