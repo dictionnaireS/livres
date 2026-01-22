@@ -1058,7 +1058,7 @@
 
 
         async function raffinerExtraitAvecIA(texte, theme, mots, titreLivre) {
-            const prompt = `SYSTEM ROLE: You are a theological text extraction expert.
+            const prompt = `SYSTEM ROLE: You are a theological text extraction expert specialized in Christian, Islamic, and philosophical religious literature.
 
 SOURCE: "${titreLivre}"
 THEME: "${theme}"
@@ -1067,12 +1067,26 @@ KEYWORDS: "${mots}"
 SOURCE TEXT:
 "${texte}"
 
-TASK 1: Provide a historical and theological presentation context (60-80 words) in French explaining the significance of this text/author.
-TASK 2: Extract the most spiritually dense passage (200-800 words) from the source text.
+TASK 1: Provide a SHORT historical and theological presentation context (40-60 words) in French explaining the significance of this text/author.
+
+TASK 2: EXTRACT the most spiritually dense passage (200-800 words) that:
+- Contains direct spiritual teachings, mystical insights, or theological concepts
+- References prayer, contemplation, divine union, grace, or salvation
+- Includes scripture citations or saint/mystic experiences
+- Provides practical spiritual guidance
+
+REQUIREMENTS FOR TASK 2:
+- Output ONLY the extracted passage verbatim
+- NO commentary, introduction, or "Here is..." inside the passage section
+- Preserve original punctuation, scripture refs, Latin/Greek/Hebrew/Arabic terms
+- Keep complete sentences and coherent paragraphs. DO NOT cut off the text in the middle of a sentence.
+- If no relevant content, return original text
+
+
 
 FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
 ###CONTEXT###
-[Your 60-80 word context in French]
+[Your 40-60 word context in French]
 ###PASSAGE###
 [The extracted passage verbatim]
 `;
