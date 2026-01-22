@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliothèque Littéraire - Recherche d'Extraits</title>
+
+    <!-- Polices Littéraires -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Scripts PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <style>
+        :root {
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-body: 'Lora', serif;
+            --font-ui: 'Outfit', sans-serif;
+
+            --background: 60 10% 97%;
+            /* #f9f9f6 - Papier */
+            --foreground: 224 30% 15%;
+            /* Texte sombre */
+            --primary: 225 39% 18%;
+            /* #1c2541 - Bleu Nuit */
+            --primary-foreground: 210 40% 98%;
+            --accent: 46 65% 52%;
+            /* #d4af37 - Or */
+            --border: 45 15% 85%;
+            --radius: 0.5rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: hsl(var(--background));
+            background-image:
+                linear-gradient(rgba(249, 249, 246, 0.95), rgba(249, 249, 246, 0.95)),
+                url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4af37' fill-opacity='0.1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+            color: hsl(var(--foreground));
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(to bottom, hsl(225 39% 22%), hsl(225 39% 15%));
+            color: white;
+            padding: 4rem 1rem;
+            text-align: center;
+            border-bottom: 4px solid hsl(var(--accent));
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-weight: 700;
+            margin-top: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            font-family: var(--font-ui);
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            color: hsl(var(--accent));
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: -2.5rem auto 4rem;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        @media (max-width: 950px) {
+            .container {
+                grid-template-columns: 1fr;
+                margin-top: 2rem;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            border: 1px solid hsl(var(--border));
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-card {
+            background: hsl(225 39% 98%);
+            border-left: 4px solid hsl(var(--accent));
+        }
+
+        .sidebar-card h3 {
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+            color: hsl(var(--primary));
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-family: var(--font-ui);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+            color: hsl(var(--primary) / 0.6);
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.85rem 1.1rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: calc(var(--radius) - 2px);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: hsl(var(--background) / 0.3);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: hsl(var(--accent));
+            background: white;
+            box-shadow: 0 0 0 3px hsl(var(--accent) / 0.15);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.9rem 1.5rem;
+            border-radius: var(--radius);
+            font-family: var(--font-ui);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            background-color: hsl(var(--primary));
+            color: white;
+            width: 100%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            background-color: hsl(225 39% 22%);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-stop {
+            background: transparent;
+            border: 1px solid hsl(var(--border));
+            color: #dc2626;
+        }
+
+        .btn-stop:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 2.5rem;
+            margin-top: 2.5rem;
+        }
+
+        @media (max-width: 950px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-title {
+            font-family: var(--font-serif);
+            font-size: 1.8rem;
+            border-bottom: 2px solid hsl(var(--accent));
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.5rem;
+            color: hsl(var(--primary));
+        }
+
+        .extrait-card {
+            border-left: 4px solid hsl(var(--accent));
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: white;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pdf-placeholder {
+            border: 2px dashed hsl(var(--border));
+            padding: 3rem 1.5rem;
+            text-align: center;
+            color: hsl(var(--primary) / 0.3);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* --- STYLES DE LA CITATION EN BAS À GAUCHE --- */
+        #quote-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            max-width: 300px;
+            padding: 1rem 1.25rem;
+            background: white;
+            border: 1px solid hsl(var(--accent) / 0.3);
+            border-left: 3px solid hsl(var(--accent));
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            font-family: var(--font-body);
+            animation: fadeIn 1s ease-out;
+        }
+
+        #quote-text {
+            font-size: 0.85rem;
+            font-style: italic;
+            color: hsl(var(--foreground));
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        #quote-author {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: hsl(var(--accent));
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+
+
+<body>
+    <header>
+    <p>Outil de recherche d'extraits</p>
+    <h1>Bibliothèque Littéraire</h1>
+    <!-- AJOUT DU SOUS-TITRE ICI -->
+    <p style="font-family: var(--font-ui); font-size: 0.95rem; margin-top: 1rem; opacity: 0.85; letter-spacing: 0.05em;">
+        Théologie · Spiritualité · Philosophie religieuse
+    </p>
+		
+    </header>
+
+    <div class="container">
+        <aside>
+            <div class="card sidebar-card">
+                <h3>📖 Guide d'utilisation</h3>
+                <ul style="list-style: none; font-size: 0.9rem; color: hsl(var(--foreground) / 0.8);">
+                    <li style="margin-bottom: 1.2rem;">
+                        <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">01.</span>
+                        <b>THÈME :</b> Indiquez le sujet de votre recherche.
+                    </li>
+                    <li style="margin-bottom: 1.2rem;">
+                        <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">02.</span>
+                        <b>MOTS-CLÉS :</b> Précisez les termes clés séparés par des virgules.
+                    </li>
+                    <li>
+                        <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">03.</span>
+                        <b>ANALYSE :</b> L'IA sélectionne les extraits les plus vibrants.
+                    </li>
+                </ul>
+            </div><br><br>
+
+            <!-- CITATION DÉPLACÉE ICI -->
+            <div class="card" style="background: white; border-left: 3px solid hsl(var(--accent));">
+                <span id="quote-text"
+                    style="font-size: 0.85rem; font-style: italic; color: hsl(var(--foreground)); margin-bottom: 0.5rem; display: block;">Chargement
+                    de la sagesse...</span>
+                <span id="quote-author"
+                    style="font-size: 0.75rem; font-weight: 700; color: hsl(var(--accent)); text-transform: uppercase; letter-spacing: 0.05em; display: block;"></span>
+            </div>
+        </aside>
+
+        <main>
+            <div class="card" style="border-top: 4px solid hsl(var(--primary));">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="input-group">
+                        <label for="theme-input">Thématique</label>
+                        <input type="text" id="theme-input" placeholder="Ex: Oraison, Contemplation...">
+                    </div>
+                    <div class="input-group">
+                        <label for="mots-cles-input">Mots-clés</label>
+                        <input type="text" id="mots-cles-input" placeholder="Ex: grâce, union, silence...">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <button id="search-btn" class="btn btn-primary" disabled onclick="startSearch()">🚀 Lancer la
+                        Recherche</button>
+                    <button id="stop-btn" class="btn btn-stop" onclick="stopSearch()">🛑 Arrêter</button>
+                </div>
+            </div>
+
+            <div class="results-grid">
+                <div>
+                    <div class="card" style="min-height: 500px;">
+                        <h3 class="section-title">📊 Résultats de recherche</h3>
+                        <div id="results-content"
+                            style="font-style: italic; color: hsl(var(--foreground) / 0.5); text-align: center; margin-top: 4rem;">
+                            En attente de vos mots-clés pour explorer la bibliothèque...
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="position: sticky; top: 20px;">
+                        <h3
+                            style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 1.5rem; color: hsl(var(--primary));">
+                            📕 Export PDF</h3>
+                        <div id="pdf-placeholder" class="pdf-placeholder">
+                            Votre recueil sera généré ici.
+                        </div>
+                        <div id="pdf-ready" style="display: none;">
+                            <button class="btn btn-primary" onclick="downloadPDF()">Télécharger le PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+	</div>
+    <!-- FOOTER SIGNATURE -->
+    <footer style="text-align: center; padding: 2rem 1rem; font-family: var(--font-ui); font-size: 0.8rem; color: hsl(var(--foreground) / 0.5); border-top: 1px solid hsl(var(--border)); margin-top: 4rem;">
+        Gildas R. · Janvier 2026
+    </footer>
+	
+
+    <script>
+        /* =======================
+           CONFIG & CONSTANTES
+        ======================= */
+
+        const HF_PROXY_URL = "https://gildasr-livres.hf.space/api/generate";
+
+        const OPENROUTER_MODELS = [
+            "deepseek/deepseek-r1-0528:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "google/gemma-3-27b-it:free",
+            "openai/gpt-oss-120b:free",
+            "google/gemma-3-12b-it:free",
+            "mistralai/devstral-2512:free",
+            "anthropic/claude-3-haiku",
+            "google/gemini-flash-1.5"
+        ];
+
+
+
+        const SPIRITUAL_SYNONYMS = {
+            // --- FAMILLE : DIEU ET TRINITÉ ---
+            "dieu": ["seigneur", "pere", "createur", "eternel", "absolu", "divinite", "trinite", "tout-puissant", "providence", "logos", "verbe", "allah", "tawhid"],
+            "seigneur": ["dieu", "christ", "pere", "maitre", "eternel"],
+            "pere": ["dieu", "createur", "abbaseigneur", "engendreur"],
+            "christ": ["jesus", "verbe", "logos", "messie", "sauveur", "redempteur", "oint", "emmanuel", "agneau"],
+            "jesus": ["christ", "sauveur", "emmanuel", "fils de dieu"],
+            "esprit": ["paraclet", "souffle", "pneuma", "consolateur", "sanctificateur", "ame", "esprit-saint"],
+            "esprit-saint": ["esprit", "paraclet", "souffle", "pneuma", "don de dieu"],
+            "verbe": ["logos", "parole", "christ", "fils"],
+            "logos": ["verbe", "parole", "reason", "christ"],
+            "trinite": ["tri-unite", "pere-fils-esprit", "communion divine"],
+            "divinite": ["dieu", "deite", "essence divine"],         
+            "sagesse": ["sapience", "sophia", "connaissance", "philosophie", "gnose"],
+            "connaissance": ["sagesse", "gnose", "intelligence", "vision", "lumiere", "ma-rifa"],
+            "lumiere": ["illumination", "clarte", "splendeur", "rayon", "gloire", "epiphanie"],
+            "illumination": ["lumiere", "grace", "gnose", "vision"],
+            "verite": ["absolu", "certitude", "dogme", "al-haqq"],
+            "neant": ["vide", "rien", "obscurite", "apophasme", "nuit-obscure"],
+            "apophasme": ["theologie-negative", "neant", "inconnaissance"]
+        };
+
+        const TYPING_SPEED_MS = 10;
+        const CHARS_PER_TICK = 10;
+        const MAX_EXTRAIT_CHARS = 1000;//au lieu de 1500
+        const MAX_SEGMENT_SOURCE_CHARS = 6000;
+        const API_TIMEOUT_MS = 45000;
+        const API_RETRY_DELAY_MS = 5000;
+
+        /* =======================
+           ÉTAT GLOBAL
+        ======================= */
+
+        let currentPassagesIA = [];
+        let currentPassagesBruts = [];
+        let selectedBooks = [];
+        let logsIA = [];
+        let isStopped = false;
+
+        /* =======================
+           CITATIONS - CORRECTION DE LA SYNTAXE
+        ======================= */
+
+        const CITATIONS = [
+  { text: "C'est en donnant que l'on reçoit.", author: "François d'Assise" },
+  { text: "Celui qui veut sauver sa vie la perdra, mais celui qui perd sa vie à cause de moi la trouvera.", author: "Jésus Christ (Matthieu 16:25)" },
+  { text: "Quand je suis faible, c'est alors que je suis fort.", author: "Paul de Tarse (2 Corinthiens 12:10)" },
+  { text: "Les derniers seront les premiers, et les premiers seront les derniers.", author: "Jésus Christ (Matthieu 20:16)" },
+ 
+{ text: "Dans le renoncement total à soi se découvre une liberté sans limites.", author: "Dag Hammarskjöld" }, 
+{ text: "Le silence où l’on consent à être jugé est le lieu de la miséricorde.", author: "Dag Hammarskjöld" }, 
+{ text: "Une vie réussie est une suite de morts consenties.", author: "Dag Hammarskjöld" }
+        ];
+
+        function afficherCitationAleatoire() {
+            const c = CITATIONS[Math.floor(Math.random() * CITATIONS.length)];
+            document.getElementById("quote-text").textContent = `« ${c.text} »`;
+            document.getElementById("quote-author").textContent = c.author;
+        }
+
+        /* =======================
+           INITIALISATION - CORRECTION
+        ======================= */
+
+        window.addEventListener("DOMContentLoaded", () => {
+            // Afficher immédiatement une citation
+            afficherCitationAleatoire();
+            setInterval(afficherCitationAleatoire, 30000);
+
+            // Attacher les event listeners
+            const themeInput = document.getElementById("theme-input");
+            const motsInput = document.getElementById("mots-cles-input");
+
+            if (themeInput && motsInput) {
+                themeInput.addEventListener("input", validateForm);
+                motsInput.addEventListener("input", validateForm);
+                themeInput.addEventListener("keyup", validateForm);
+                motsInput.addEventListener("keyup", validateForm);
+
+                // Validation initiale
+                validateForm();
+            }
+        });
+
+        /* =======================
+           VALIDATION FORMULAIRE - CORRECTION
+        ======================= */
+
+        function validateForm() {
+            const theme = document.getElementById("theme-input").value.trim();
+            const mots = document.getElementById("mots-cles-input").value.trim();
+            const btn = document.getElementById("search-btn");
+
+            const motsArray = mots
+                .split(/[,]+/)
+                .map(m => m.trim())
+                .filter(m => m.length > 2);
+
+            // Validation : soit thème + 1 mot-clé, soit 2 mots-clés minimum
+            const isValid =
+                (theme.length > 0 && motsArray.length >= 1) ||
+                (theme.length === 0 && motsArray.length >= 2);
+
+            btn.disabled = !isValid;
+        }
+
+        /* =======================
+           OUTILS TEXTE
+        ======================= */
+
+        function expandSynonyms(words) {
+            let expanded = [...words];
+            words.forEach(w => {
+                const syns = SPIRITUAL_SYNONYMS[w];
+                if (syns) expanded.push(...syns);
+            });
+            return [...new Set(expanded)];
+        }
+
+        function isTableOfContentsOrBiblio(text) {
+            const t = text.toLowerCase();
+            return (
+                t.includes("bibliographie") ||
+                t.includes("table des matières") ||
+                t.includes("sommaire") ||
+                t.includes("isbn") ||
+                t.includes("tous droits réservés") ||
+                t.includes("note de l'éditeur") ||
+                t.includes("index") ||
+                t.includes("achevé d'imprimer") ||
+                t.includes("dépôt légal") ||
+                t.includes("imprimé en")
+            );
+        }
+
+        /* =======================
+           INDEX & LIVRES
+        ======================= */
+
+        async function loadIndexMaster() {
+            const r = await fetch("LIVRES/index_master.json");
+            if (!r.ok) throw new Error("Index introuvable");
+            return r.json();
+        }
+
+        async function loadBookJSON(filename) {
+            const r = await fetch(`LIVRES/${filename}`);
+            if (!r.ok) throw new Error(`Livre ${filename} introuvable`);
+            const data = await r.json();
+
+            return {
+                titre: data.metadata?.titre || filename,
+                auteur: data.metadata?.auteur || "Auteur inconnu",
+                chunks: decoupageIntelligent(data.texte_integral)
+            };
+        }
+
+        function decoupageIntelligent(text) {
+            const paras = text.replace(/\r\n/g, "\n").split(/\n\s*\n/);
+            let chunks = [];
+            let current = "";
+
+            for (let p of paras) {
+                if (current.length + p.length > 5000) {
+                    chunks.push(current);
+                    current = p;
+                } else {
+                    current += "\n\n" + p;
+                }
+            }
+            if (current) chunks.push(current);
+            return chunks;
+        }
+
+        /* =======================
+           SÉLECTION & SCORING - MODIFIÉ
+        ======================= */
+
+        function selectBestBooks(livres, theme, mots) {
+            const themeWords = theme.toLowerCase().split(/[\s,]+/).filter(w => w.length > 3);
+            const expandedTheme = expandSynonyms(themeWords);
+            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+            const expandedKeywords = expandSynonyms(keywords);
+
+            // Calculer les scores pour tous les livres
+            const scoredBooks = livres
+                .map(book => {
+                    let score = 0;
+                    const text = `${book.titre} ${book.auteur} ${(book.themes || "")} ${(book.mots_cles || "")}`.toLowerCase();
+
+                   // Priorité au thème (poids plus important)
+expandedTheme.forEach(t => {
+    const regex = new RegExp(`\\b${t}\\b`, "gi");
+    const matches = text.match(regex);
+    if (matches) score += matches.length * 15;
+});
+
+// Mots-clés avec synonymes
+expandedKeywords.forEach(k => {
+    const regex = new RegExp(`\\b${k}\\b`, "gi");
+    const matches = text.match(regex);
+    if (matches) score += matches.length * 12;
+});
+
+                    // Bonus pour les ouvrages théologiques/spirituels
+                    const spiritualIndicators = [
+                        "théologie", "spiritualité", "mystique", "liturgie",
+                        "exégèse", "patristique", "saint", "père", "docteur"
+                    ];
+                    spiritualIndicators.forEach(indicator => {
+                        if (text.includes(indicator)) score += 8;
+                    });
+
+                    return { book, score };
+                })
+                .sort((a, b) => b.score - a.score);
+
+            // Prendre les 10 meilleurs
+            const top10 = scoredBooks.slice(0, 10);
+
+            // Sélectionner 2 livres au hasard parmi ces 10
+            const shuffled = [...top10].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, 2).map(x => x.book);
+        }
+
+        function analyzeBookChunks(book, theme, mots) {
+            const themeWords = expandSynonyms(theme.toLowerCase().split(/[\s,]+/));
+            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+            const expandedKeywords = expandSynonyms(keywords);
+
+            let scores = [];
+
+            book.chunks.forEach((chunk, i) => {
+                if (isTableOfContentsOrBiblio(chunk)) return;
+
+                let score = 0;
+                const lc = chunk.toLowerCase();
+
+                // Score pour le thème avec synonymes
+                themeWords.forEach(t => {
+                    const m = lc.match(new RegExp(`\\b${t}\\b`, "g"));
+                    if (m) score += m.length * 12;
+                });
+
+                // Score pour les mots-clés avec synonymes
+                expandedKeywords.forEach(k => {
+                    const m = lc.match(new RegExp(`\\b${k}\\b`, "g"));
+                    if (m) score += m.length * 15;
+                });
+
+                // Bonus pour les citations scripturaires
+                const scripturePatterns = [
+                    /\b(mt|mc|lc|jn|rm|co|ga|ep|ph|col|th|tm|tt|phm|he|jc|pi|jn|jude|ap)\s+\d+/gi,
+                    /\b(matthieu|marc|luc|jean|actes|romains|corinthiens|galates|éphésiens|philippiens|colossiens|thessaloniciens|timothée|tite|philémon|hébreux|jacques|pierre|apocalypse)\s+\d+/gi
+                ];
+                scripturePatterns.forEach(pattern => {
+                    if (pattern.test(chunk)) score += 20;
+                });
+
+                // Bonus pour vocabulaire théologique riche
+                const theologicalTerms = [
+                    "trinité", "incarnation", "rédemption", "salut", "grâce", "providence",
+                    "communion", "eucharistie", "sacrifice", "liturgie", "sacrement",
+                    "contemplation", "mystique", "ascèse", "vertu", "béatitude"
+                ];
+                theologicalTerms.forEach(term => {
+                    const m = lc.match(new RegExp(`\\b${term}\\b`, "g"));
+                    if (m) score += m.length * 5;
+                });
+
+                // Privilégier les passages de longueur optimale (ni trop courts, ni trop longs)
+                const wordCount = chunk.split(/\s+/).length;
+                if (wordCount >= 80 && wordCount <= 350) score += 10;  // Au lieu de 100-500
+                if (wordCount >= 40 && wordCount < 80) score += 5;     // Au lieu de 50-100
+
+                if (score > 10) scores.push({ id: i, score, text: chunk });
+            });
+
+            return scores.sort((a, b) => b.score - a.score);
+        }
+
+        /* =======================
+           LANCEMENT RECHERCHE
+        ======================= */
+
+        async function startSearch() {
+            isStopped = false;
+            const theme = document.getElementById("theme-input").value.trim();
+            const mots = document.getElementById("mots-cles-input").value.trim();
+
+            document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>🔎 Recherche en cours dans les ouvrages...</p>";
+            currentPassagesIA = [];
+            currentPassagesBruts = [];
+            logsIA = [];
+
+            try {
+                console.log("🔍 Démarrage recherche:", { theme, mots });
+
+                const index = await loadIndexMaster();
+                const livres = index.livres || index;
+                console.log(`📚 ${livres.length} livres trouvés dans l'index`);
+
+                selectedBooks = selectBestBooks(livres, theme, mots);
+                console.log("📖 Livres sélectionnés:", selectedBooks.map(b => b.titre || b.fichier_json));
+
+                if (selectedBooks.length < 2) {
+                    throw new Error(`Seulement ${selectedBooks.length} livre(s) sélectionné(s). Essayez des mots-clés plus généraux.`);
+                }
+
+                // Charger et analyser les deux livres
+                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Chargement du premier livre...</p>";
+                const book1 = await loadBookJSON(selectedBooks[0].fichier_json);
+                console.log(`✅ Livre 1 chargé: ${book1.chunks.length} segments`);
+
+                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Analyse du premier livre...</p>";
+                const scores1 = analyzeBookChunks(book1, theme, mots);
+                console.log(`📊 Livre 1: ${scores1.length} extraits pertinents trouvés`);
+
+                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Chargement du second livre...</p>";
+                const book2 = await loadBookJSON(selectedBooks[1].fichier_json);
+                console.log(`✅ Livre 2 chargé: ${book2.chunks.length} segments`);
+
+                document.getElementById("results-content").innerHTML = "<p style='text-align:center;'>📖 Analyse du second livre...</p>";
+                const scores2 = analyzeBookChunks(book2, theme, mots);
+                console.log(`📊 Livre 2: ${scores2.length} extraits pertinents trouvés`);
+
+                if (scores1.length === 0 && scores2.length === 0) {
+                    throw new Error("Aucun extrait pertinent trouvé dans ces ouvrages. Essayez d'autres mots-clés.");
+                }
+
+               // Préparer les extraits pour l'IA
+			   document.getElementById("results-content").innerHTML = "";
+			   
+const topScores1 = scores1.slice(0, 3);
+const topScores2 = scores2.slice(0, 2);
+
+const allExtraits = [
+    ...topScores1.map(s => ({ ...s, livre: book1 })),
+    ...topScores2.map(s => ({ ...s, livre: book2 }))
+];
+
+// Traiter chaque extrait avec l'IA
+for (let i = 0; i < allExtraits.length; i++) {
+    if (isStopped) break;
+
+    const extrait = allExtraits[i];
+
+    // Afficher d'abord la version brute
+    const tempCard = afficherExtraitAvecChargement(
+        extrait.livre.titre,
+        extrait.livre.auteur,
+        extrait.text,
+        extrait.score,
+        i + 1
+    );
+
+    // LOGIQUE HYBRIDE : 3 premiers SANS IA, 2 derniers AVEC IA
+    if (i >= 3) {
+        // Mode AVEC IA (les 2 derniers)
+        try {
+            const resultat = await raffinerExtraitAvecIA(
+                extrait.text,
+                theme,
+                mots,
+                extrait.livre.titre
+            );
+
+            if (resultat.success) {
+                mettreAJourExtraitRaffine(tempCard, resultat.text, true);
+                currentPassagesIA.push({
+                    text: resultat.text,
+                    titre: extrait.livre.titre,
+                    auteur: extrait.livre.auteur
+                });
+            } else {
+                mettreAJourExtraitRaffine(tempCard, resultat.text, false);
+                currentPassagesIA.push({
+                    text: resultat.text,
+                    titre: extrait.livre.titre,
+                    auteur: extrait.livre.auteur
+                });
+            }
+
+        } catch (err) {
+            console.error("Erreur IA pour extrait", i, err);
+            const texteOriginal = extrait.text.substring(0, MAX_EXTRAIT_CHARS);
+            mettreAJourExtraitRaffine(tempCard, texteOriginal, false);
+            currentPassagesIA.push({
+                text: texteOriginal,
+                titre: extrait.livre.titre,
+                auteur: extrait.livre.auteur
+            });
+        }
+        // Délai important après un appel IA
+        await new Promise(r => setTimeout(r, 5000));
+    } else {
+        // Mode sans IA (Raw) - les 3 premiers
+        await new Promise(r => setTimeout(r, 1000));
+        const texteCoupe = extrait.text.length > 1500
+            ? extrait.text.substring(0, 1500) + "[...]"
+            : extrait.text;
+
+        mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
+        currentPassagesBruts.push({
+            text: texteCoupe,
+            titre: extrait.livre.titre,
+            auteur: extrait.livre.auteur
+        });
+    }
+}
+            console.log(`✅ Traitement terminé: ${currentPassagesIA.length} extraits raffinés`);
+
+// Activer le PDF
+document.getElementById("pdf-placeholder").style.display = "none";
+document.getElementById("pdf-ready").style.display = "block";
+// AJOUT DU RAPPORT TECHNIQUE
+afficherRapportTechnique();
+
+
+            } catch (e) {
+                document.getElementById("results-content").innerHTML = `
+            <div style='color:#dc2626; text-align:center; padding: 2rem;'>
+                <p style='font-size: 1.2rem; margin-bottom: 1rem;'>❌ ${e.message}</p>
+                <p style='font-size: 0.9rem; opacity: 0.7;'>Consultez la console (F12) pour plus de détails</p>
+            </div>
+        `;
+                console.error("❌ Erreur complète:", e);
+            }
+        }
+
+        function afficherExtraitAvecChargement(titre, auteur, texte, score, numero) {
+            const texteAffiche = texte.length > MAX_EXTRAIT_CHARS
+                ? texte.substring(0, MAX_EXTRAIT_CHARS) + "..."
+                : texte;
+
+            const card = document.createElement("div");
+            card.className = "extrait-card";
+            card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <div>
+                <h4 style="font-family: var(--font-serif); font-size: 1.3rem; color: hsl(var(--primary)); margin-bottom: 0.3rem;">
+                    ${titre}
+                </h4>
+                <p style="font-family: var(--font-ui); font-size: 0.8rem; color: hsl(var(--accent)); text-transform: uppercase; letter-spacing: 0.05em;">
+                    ${auteur}
+                </p>
+            </div>
+            <span style="background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+                Score: ${score}
+            </span>
+        </div>
+        <div class="extrait-content">
+            <div class="loading-ia" style="text-align: center; padding: 2rem; color: hsl(var(--accent));">
+                <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid hsl(var(--accent) / 0.3); border-top-color: hsl(var(--accent)); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">🤖 Raffinement par l'IA...</p>
+            </div>
+        </div>
+    `;
+
+            document.getElementById("results-content").appendChild(card);
+            return card;
+        }
+
+        function mettreAJourExtraitRaffine(card, texteRaffine, type = true) {
+            const content = card.querySelector(".extrait-content");
+
+            let badge = "";
+            if (type === true) {
+                badge = `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--accent));">
+            ✨ Extrait raffiné par IA
+           </div>`;
+            } else if (type === 'raw') {
+                badge = `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: hsl(var(--foreground)); opacity: 0.7;">
+            📄 Extrait original (Non traité par IA)
+           </div>`;
+            } else {
+                badge = `<div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid hsl(var(--border)); font-size: 0.75rem; color: #dc2626;">
+            ⚠️ Extrait brut (API IA indisponible)
+           </div>`;
+            }
+
+            content.innerHTML = `
+        <p style="font-size: 0.95rem; line-height: 1.8; color: hsl(var(--foreground) / 0.85); text-align: justify;">
+            ${texteRaffine}
+        </p>
+        ${badge}
+    `;
+        }
+
+function afficherRapportTechnique() {
+    const modelsUsed = [...new Set(logsIA.map(log => log.model))];
+    
+    const rapportHTML = `
+        <div style="margin-top: 3rem; padding: 1.5rem; background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); font-family: var(--font-ui);">
+            <p style="font-size: 0.7rem; color: hsl(var(--foreground) / 0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">
+                📊 Rapport Technique
+            </p>
+            <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.6); line-height: 1.6;">
+                <strong>Modèles IA utilisés :</strong> ${modelsUsed.length > 0 ? modelsUsed.join(', ') : 'Aucun (extraits bruts)'}
+            </p>
+            <p style="font-size: 0.7rem; color: hsl(var(--foreground) / 0.4); margin-top: 0.5rem; font-style: italic;">
+                ${logsIA.length} appel(s) API effectué(s) · ${currentPassagesIA.length} extrait(s) raffiné(s) · ${currentPassagesBruts.length} extrait(s) brut(s)
+            </p>
+        </div>
+    `;
+    
+    document.getElementById("results-content").insertAdjacentHTML('beforeend', rapportHTML);
+}
+
+
+        function marquerExtraitErreur(card) {
+            const loadingDiv = card.querySelector(".loading-ia");
+            if (loadingDiv) {
+                loadingDiv.innerHTML = `
+            <p style="color: #dc2626; font-size: 0.9rem;">⚠️ Erreur de traitement IA - Extrait brut conservé</p>
+        `;
+            }
+        }
+
+
+
+        async function raffinerExtraitAvecIA(texte, theme, mots, titreLivre) {
+            const prompt = `SYSTEM ROLE: You are a text extraction engine. 
+TASK: Extract the relevant passage from the provided text based on the theme and keywords.
+
+THEME: "${theme}"
+KEYWORDS: "${mots}"
+SOURCE TEXT:
+"${texte}"
+
+INSTRUCTIONS:
+1. Output ONLY the extracted text passage.
+2. Do NOT add "Here is the summary" or "Analysis:".
+3. Do NOT summarize or paraphrase.
+4. Keep the passage coherent and sufficiently long to understand the context (at least 200 words if possible).
+5. If the text does not contain relevant content, return the whole text.
+6. Your output must be a direct copy-paste of a substring of the source text.
+
+OUTPUT:`;
+
+            let lastError = null;
+
+            // On boucle sur les modèles disponibles comme dans index.html
+            for (const model of OPENROUTER_MODELS) {
+                try {
+                    console.log(`🤖 Tentative avec le modèle : ${model}`);
+
+                    const response = await fetch(HF_PROXY_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: model,
+                            prompt: prompt,
+                            max_tokens: 2000,
+                            temperature: 0.1
+                        })
+                    });
+
+                   if (response.ok) {
+    const data = await response.json();
+    // Le proxy peut renvoyer différents formats selon le backend
+    const result = data.response || data.text || data.generated_text || (data.choices && data.choices[0]?.message?.content);
+    
+    if (result) {                            
+        console.log(`✅ Succès avec ${model}`);  // ✅ Parenthèses correctes
+        logsIA.push({ model: model });
+        return { success: true, text: result };
+    }
+}
+
+// Gestion des rate limits (429/402) -> on passe simplement au modèle suivant
+if (response.status === 429 || response.status === 402) {
+    console.warn(`⚠️ Rate limit (${response.status}) sur ${model} - Passage au suivant...`);  // ✅ Parenthèses correctes
+    // Petit délai de politesse avant le suivant
+    await new Promise(r => setTimeout(r, 1000));
+    continue;
+}
+
+                    console.warn(`❌ Erreur ${response.status} sur ${model}`);
+
+                } catch (e) {
+                    console.error(`❌ Exception sur ${model}:`, e.message);
+                    lastError = e;
+                }
+            }
+
+            // Si tous les modèles échouent
+            console.log("⚠️ Tous les modèles ont échoué, texte original conservé");
+            return {
+                success: false,
+                text: texte.substring(0, MAX_EXTRAIT_CHARS)
+            };
+        }
+
+        function downloadPDF() {
+            const theme = document.getElementById('theme-input').value;
+            const mots = document.getElementById('mots-cles-input').value;
+            const allPassages = [...currentPassagesIA, ...currentPassagesBruts];
+
+            if (allPassages.length === 0) {
+                alert("Aucun extrait disponible.");
+                return;
+            }
+
+            const dateStr = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+            const uniqueBooks = [...new Set(allPassages.map(p => p.titre))].join(' & ');
+
+            const docDefinition = {
+                pageSize: 'A4',
+                pageMargins: [60, 80, 60, 60],
+                content: [
+                    { text: 'EXTRAITS LITTERAIRES', style: 'mainTitle', alignment: 'center', margin: [0, 150, 0, 20] },
+                    { text: `Critères : ${theme} / ${mots}`, margin: [0, 20, 0, 0], bold: true, alignment: 'center' },
+                    { text: `Sources : ${uniqueBooks}`, margin: [0, 10, 0, 0], alignment: 'center', fontSize: 12, color: '#e67e22' },
+                    { text: `Date : ${dateStr}`, margin: [0, 5, 0, 0], alignment: 'center' },
+                    { text: '', pageBreak: 'after' },
+
+                    { text: 'TABLE DES EXTRAITS', style: 'sectionHeader', margin: [0, 0, 0, 15] },
+                    {
+                        ul: allPassages.map((p, i) => ({
+                            text: [
+                                { text: p.titre || 'Sans titre', bold: true },
+                                { text: ` - ${p.auteur || 'Auteur inconnu'}`, italics: true, fontSize: 10 }
+                            ],
+                            margin: [0, 5],
+                            linkToDestination: `p${i}`
+                        }))
+                    },
+                    { text: '\n', pageBreak: 'after' },
+
+                    ...allPassages.map((p, i) => [
+                        { text: p.titre || `Extrait #${i + 1}`, style: 'passageTitle', margin: [0, 20, 0, 5], id: `p${i}` },
+                        { text: `${p.titre} - ${p.auteur || 'Auteur inconnu'}`, fontSize: 9, italics: true, color: '#666', margin: [0, 0, 0, 10] },
+                        { text: p.text || '', style: 'bodyText', alignment: 'justify' },
+                        { text: '\n\n' },
+                        { text: '---', alignment: 'center', color: '#ccc', margin: [0, 20] }
+                    ]).flat(),
+
+                    { text: '', pageBreak: 'before' },
+                    { text: `Généré automatiquement par Bibliothèque IA`, fontSize: 10, italics: true, color: '#666', alignment: 'center' }
+                ],
+                styles: {
+                    mainTitle: { fontSize: 24, bold: true, color: '#1c2541' },
+                    sectionHeader: { fontSize: 16, bold: true, color: '#1c2541', decoration: 'underline' },
+                    passageTitle: { fontSize: 14, bold: true, color: '#2c3e50' },
+                    bodyText: { fontSize: 11, lineHeight: 1.5, font: 'Roboto' }
+                },
+                defaultStyle: { font: 'Roboto' }
+            };
+
+            pdfMake.createPdf(docDefinition).download(`Extraits_${dateStr}.pdf`);
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>
