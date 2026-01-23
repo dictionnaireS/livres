@@ -476,6 +476,17 @@
                             <button class="btn btn-primary" onclick="downloadPDF()">Télécharger le PDF</button>
                         </div>
                     </div>
+                    <div class="card"
+                        style="margin-top: 1.5rem; text-align: center; border-left: 4px solid hsl(var(--accent));">
+                        <h3
+                            style="font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 0.5rem; color: hsl(var(--primary));">
+                            📬 Nous contacter</h3>
+                        <p style="font-size: 0.85rem; margin-bottom: 1rem; color: hsl(var(--foreground) / 0.7);">Une
+                            question ou une suggestion ?</p>
+                        <a href="https://dictionnaires.github.io/Spiritualite/contact.html" class="btn"
+                            style="background-color: hsl(var(--accent)); color: white; width: 100%; text-decoration: none;">Écrire
+                            un message</a>
+                    </div>
                 </div>
             </div>
         </main>
@@ -1085,6 +1096,10 @@
                 // AJOUT DU RAPPORT TECHNIQUE
                 afficherRapportTechnique();
 
+                // Effacer les champs de saisie
+                document.getElementById('theme-input').value = '';
+                document.getElementById('mots-cles-input').value = '';
+                validateForm();
 
             } catch (e) {
                 document.getElementById("results-content").innerHTML = `
