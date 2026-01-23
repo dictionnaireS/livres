@@ -399,11 +399,17 @@
                     </li>
                     <li>
                         <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">03.</span>
-                        <b>ANALYSE :</b> L'IA sélectionne 2 livres pertinents ( attente possible jusqu'à 2mn )
+                        <b>ANALYSE :</b> Sans l'aide de l'I.A. vous obtiendrez 5 extraits de deux livres, rapidement,
+                        mais des extraits bruts.
                     </li>
                     <li style="margin-bottom: 1.2rem;">
                         <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">04.</span>
-                        <b>ANALYSE :</b> 5 passages sont extraits, possibilité de produire un fichier au format PDF.
+                        <b>ANALYSE :</b> Avec l'aide de l'I.A., 3 extraits sont bruts, et deux sont mieux sélectionnés
+                        et mieux présentés. ( attendre 2 mn)
+                    </li>
+                    <li style="margin-bottom: 1.2rem;">
+                        <span style="color: hsl(var(--accent)); font-weight: 800; margin-right: 5px;">04.</span>
+                        <b>ANALYSE :</b> Il est possible de télécharger vos résultats dans un fichier au format PDF
                     </li>
                     <li style="margin-top: 1.5rem; border-top: 2px solid hsl(var(--accent) / 0.3); padding-top: 1rem;">
                         <button id="search-no-ia-btn" class="btn"
@@ -608,7 +614,7 @@
 
         const TYPING_SPEED_MS = 10;
         const CHARS_PER_TICK = 10;
-        const MAX_EXTRAIT_CHARS = 2000;// augmenté de 1000 à 2000 pour plus de texte sans IA
+        const MAX_EXTRAIT_CHARS = 3000;// augmenté pour plus de texte dans les extraits bruts
         const MAX_SEGMENT_SOURCE_CHARS = 6000;
         const API_TIMEOUT_MS = 45000;
         const API_RETRY_DELAY_MS = 5000;
@@ -1076,8 +1082,8 @@
                     } else {
                         // Mode sans IA (Raw)
                         if (!forceNoIA) await new Promise(r => setTimeout(r, 1000));
-                        const texteCoupe = extrait.text.length > 3000
-                            ? extrait.text.substring(0, 3000) + "[...]"
+                        const texteCoupe = extrait.text.length > 4000
+                            ? extrait.text.substring(0, 4000) + "[...]"
                             : extrait.text;
 
                         mettreAJourExtraitRaffine(tempCard, texteCoupe, 'raw');
@@ -1223,7 +1229,7 @@ SOURCE TEXT:
 
 TASK 1: Provide a SHORT historical and theological presentation context (40-60 words) in French explaining the significance of this text/author.
 
-TASK 2: EXTRACT the most spiritually dense passage (150-400 words) that:
+TASK 2: EXTRACT the most spiritually dense passage (250-600 words) that:
 - Contains direct spiritual teachings, mystical insights, or theological concepts
 - References prayer, contemplation, divine union, grace, or salvation
 - Includes scripture citations or saint/mystic experiences
