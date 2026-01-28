@@ -26,6 +26,10 @@
     <meta name="twitter:title" content="Bibliothèque Littéraire - Recherche IA d'Extraits">
     <meta name="twitter:description" content="Recherchez des extraits spirituels avec l'IA">
 
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1c2541">
+    <link rel="apple-touch-icon" href="https://dictionnaires.github.io/Spiritualite/icon-192.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
 
 
@@ -463,7 +467,7 @@
             <div class="results-grid">
                 <div>
                     <div class="card" style="min-height: 500px;">
-                        <h3 class="section-title">📊 Résultats de recherche</h3>
+                        <h3 class="section-title"> Résultats de recherche</h3>
                         <div id="results-content"
                             style="font-style: italic; color: hsl(var(--foreground) / 0.5); text-align: center; margin-top: 4rem;">
                             En attente de vos mots-clés pour explorer la bibliothèque...
@@ -474,7 +478,7 @@
                     <div class="card" style="position: sticky; top: 20px;">
                         <h3
                             style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 1.5rem; color: hsl(var(--primary));">
-                            📕 Export PDF</h3>
+                            Export PDF</h3>
                         <div id="pdf-placeholder" class="pdf-placeholder">
                             Votre recueil sera généré ici.
                         </div>
@@ -483,15 +487,38 @@
                         </div>
                     </div>
                     <div class="card"
-                        style="margin-top: 1.5rem; text-align: center; border-left: 4px solid hsl(var(--accent));">
+                        style="margin-top: 1.5rem; text-align: center; border-left: 4px solid hsl(var(--accent)); padding: 2rem 1.5rem;">
+
+                        <!-- Icone Enveloppe -->
+                        <div
+                            style="width: 45px; height: 45px; background: hsl(var(--primary) / 0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 1px solid hsl(var(--primary) / 0.05);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                                style="color: hsl(var(--primary));">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                </path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                        </div>
+
                         <h3
-                            style="font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 0.5rem; color: hsl(var(--primary));">
-                            📬 Nous contacter</h3>
-                        <p style="font-size: 0.85rem; margin-bottom: 1rem; color: hsl(var(--foreground) / 0.7);">Une
-                            question ou une suggestion ?</p>
+                            style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 1.5rem; color: hsl(var(--primary)); font-weight: 500;">
+                            Nous contacter
+                        </h3>
+
                         <a href="https://dictionnaires.github.io/Spiritualite/contact.html" class="btn"
-                            style="background-color: hsl(var(--accent)); color: white; width: 100%; text-decoration: none;">Écrire
-                            un message</a>
+                            style="background-color: hsl(var(--primary)); color: white; width: 100%; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0.8rem; border-radius: 6px; font-size: 0.8rem; letter-spacing: 0.1em;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            ÉCRIRE UN MESSAGE
+                        </a>
+
+                        <a href="https://dictionnaires.github.io/Spiritualite/recherche.html"
+                            style="display: block; margin-top: 1.5rem; color: hsl(var(--primary) / 0.8); text-decoration: none; font-family: var(--font-serif); font-style: italic; font-size: 1.1rem; transition: color 0.2s;">
+                            Recherche dans les dictionnaires
+                        </a>
                     </div>
                 </div>
             </div>
@@ -518,6 +545,27 @@
         /* =======================
            CONFIG & CONSTANTES
         ======================= */
+
+        // Charger la configuration depuis localStorage
+        const CONFIG = (() => {
+            const saved = localStorage.getItem('bibliotheque_config');
+            return saved ? JSON.parse(saved) : {
+                maxExtrait: 3000,
+                maxSegment: 6000,
+                typingSpeed: 10,
+                charsPerTick: 10,
+                apiTimeout: 45000,
+                apiRetryDelay: 5000
+            };
+        })();
+
+        // Utiliser CONFIG au lieu des constantes
+        const MAX_EXTRAIT_CHARS = CONFIG.maxExtrait;
+        const MAX_SEGMENT_SOURCE_CHARS = CONFIG.maxSegment;
+        const TYPING_SPEED_MS = CONFIG.typingSpeed;
+        const CHARS_PER_TICK = CONFIG.charsPerTick;
+        const API_TIMEOUT_MS = CONFIG.apiTimeout;
+        const API_RETRY_DELAY_MS = CONFIG.apiRetryDelay;
 
         const HF_PROXY_URL = "https://gildasr-livres.hf.space/api/generate";
 
@@ -612,12 +660,6 @@
             "transcendance": ["elevation", "depassement", "suprematie"]
         };
 
-        const TYPING_SPEED_MS = 10;
-        const CHARS_PER_TICK = 10;
-        const MAX_EXTRAIT_CHARS = 3000;// augmenté pour plus de texte dans les extraits bruts
-        const MAX_SEGMENT_SOURCE_CHARS = 6000;
-        const API_TIMEOUT_MS = 45000;
-        const API_RETRY_DELAY_MS = 5000;
 
         /* =======================
            ÉTAT GLOBAL
@@ -1382,6 +1424,16 @@ FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
 
     </script>
 
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker enregistré !'))
+                    .catch(err => console.log('Erreur SW:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>
