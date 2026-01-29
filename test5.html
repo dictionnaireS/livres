@@ -490,7 +490,7 @@
                         style="margin-top: 1.5rem; text-align: center; border-left: 4px solid hsl(var(--accent)); padding: 2rem 1.5rem;">
 
                         <!-- Icone Enveloppe -->
-                        
+
                         <a href="https://dictionnaires.github.io/Spiritualite/contact.html" class="btn"
                             style="background-color: hsl(var(--primary)); color: white; width: 100%; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0.8rem; border-radius: 6px; font-size: 0.8rem; letter-spacing: 0.1em;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1011,7 +1011,7 @@
                 console.log(`📚 ${livres.length} livres trouvés dans l'index`);
 
                 selectedBooks = selectBestBooks(livres, theme, mots);
-                console.log("📖 Livres sélectionnés:", selectedBooks.map(b => b.titre || b.fichier_json));
+                console.log("📖 Livres sélectionnés:", selectedBooks.map(b => b.titre || b.fichier));
 
                 if (selectedBooks.length < 2) {
                     throw new Error(`Seulement ${selectedBooks.length} livre(s) sélectionné(s). Essayez des mots-clés plus généraux.`);
@@ -1020,7 +1020,7 @@
                 // Charger et analyser les deux livres
                 const statusStep = document.getElementById("search-status-step");
                 if (statusStep) statusStep.innerText = "📖 Chargement du premier livre...";
-                const book1 = await loadBookJSON(selectedBooks[0].fichier_json);
+                const book1 = await loadBookJSON(selectedBooks[0].fichier);
                 console.log(`✅ Livre 1 chargé: ${book1.chunks.length} segments`);
 
                 if (statusStep) statusStep.innerText = "📖 Analyse du premier livre...";
@@ -1028,7 +1028,7 @@
                 console.log(`📊 Livre 1: ${scores1.length} extraits pertinents trouvés`);
 
                 if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Lecture' : 'Analyse'} du second livre...`;
-                const book2 = await loadBookJSON(selectedBooks[1].fichier_json);
+                const book2 = await loadBookJSON(selectedBooks[1].fichier);
                 console.log(`✅ Livre 2 chargé: ${book2.chunks.length} segments`);
 
                 if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Extraction' : 'Analyse'} des passages...`;
