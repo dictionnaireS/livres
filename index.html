@@ -797,13 +797,13 @@
                 displayProgress(`OK Livres selectionnes : ${bestBooks[0].titre} & ${bestBooks[1].titre}`);
 
                 displayProgress("Chargement du premier livre...");
-                const book1Data = await loadBookJSON(bestBooks[0].fichier_json);
+                const book1Data = await loadBookJSON(bestBooks[0].fichier);
                 const scores1 = analyzeBookChunks(book1Data, theme, mots);
 
                 if (scores1.length === 0) {
                     displayProgress(`Alerte Peu de correspondance dans ${bestBooks[0].titre}, analyse des deux livres...`);
                     
-                    const book2Data = await loadBookJSON(bestBooks[1].fichier_json);
+                    const book2Data = await loadBookJSON(bestBooks[1].fichier);
                     const scores2 = analyzeBookChunks(book2Data, theme, mots);
                     
                     if (scores2.length === 0) {
@@ -882,7 +882,7 @@
                     }
 
                     displayProgress("Bg: Chargement du deuxieme livre...");
-                    const book2Data = await loadBookJSON(bestBooks[1].fichier_json);
+                    const book2Data = await loadBookJSON(bestBooks[1].fichier);
                     const scores2 = analyzeBookChunks(book2Data, theme, mots);
 
                     if (scores2.length > 0) {
