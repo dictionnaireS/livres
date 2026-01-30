@@ -869,7 +869,8 @@
 
             // Lignes trop courtes qui ne sont pas des titres (finissent pas par une ponctuation forte ou sans verbe)
             // On garde si ça ressemble à un titre (tout majuscule ou court mais significatif)
-            if (t.length < 30 && !/[.?!]$/.test(t) && !/^[A-ZÀ-Z\s]+$/.test(text)) {
+            // Correction Regex: [A-ZÀ-ÖØ-Þ] couvre les majuscules accentuées standard
+            if (t.length < 30 && !/[.?!]$/.test(t) && !/^[A-ZÀ-ÖØ-Þ\s]+$/.test(text)) {
                 // On rejette les fragments sauf s'ils contiennent des mots très importants
                 return true;
             }
