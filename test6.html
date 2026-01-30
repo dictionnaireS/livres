@@ -857,21 +857,27 @@
         function isTableOfContentsOrBiblio(text) {
             const t = text.toLowerCase();
 
-            // Regex pour repérer les lignes qui ne sont QUE des chiffres ou chiffres + symboles (numéros de page, chapitres)
+            // 1. Regex pour repérer les lignes qui ne sont QUE des chiffres ou chiffres + symboles (numéros de page, chapitres)
             if (/^[\d\s\.\,\-\/]+$/.test(t)) return true;
 
-            // Regex pour Tables des matières et structures techniques
+            // 2. Tables des matières et structures techniques
             if (/table\s+des\s+mati[èe]res|sommaire|bibliographie|index\s+des|appendice/.test(t)) return true;
 
-            // Métadonnées d'édition
+            // 3. Métadonnées d'édition
             if (t.includes("isbn") || t.includes("tous droits réservés") || t.includes("copyright") ||
                 t.includes("dépôt légal") || t.includes("imprimé en") || t.includes("http")) return true;
 
-            // Lignes trop courtes qui ne sont pas des titres (finissent pas par une ponctuation forte ou sans verbe)
-            // On garde si ça ressemble à un titre (tout majuscule ou court mais significatif)
-            // Correction Regex: [A-ZÀ-ÖØ-Þ] couvre les majuscules accentuées standard
-            if (t.length < 30 && !/[.?!]$/.test(t) && !/^[A-ZÀ-ÖØ-Þ\s]+$/.test(text)) {
-                // On rejette les fragments sauf s'ils contiennent des mots très importants
+            // 4. NOUVEAU : Détection de listes de références (Bibliographies)
+            // Si on a beaucoup de dates (18xx, 19xx ou 20xx) dans le texte
+            const dates = (t.match(/\b(18|19|20)\d{2}\b/g) || []).length;
+            if (dates > 4 && text.length < 2000) return true; // Ratio dates/longueur suspect
+
+            // 5. Ratio de majuscules (Noms d'auteurs en rafale dans les notes)
+            const caps = (text.match(/[A-ZÀ-ÖØ-Þ]/g) || []).length;
+            if (text.length > 300 && (caps / text.length) > 0.12) return true;
+
+            // 6. Lignes trop courtes qui ne sont pas des titres
+            if (t.length < 35 && !/[.?!]$/.test(t) && !/^[A-ZÀ-ÖØ-Þ\s]+$/.test(text)) {
                 return true;
             }
 
@@ -1017,6 +1023,7 @@
                 // Trie par index pour calculer les distances
                 matches.sort((a, b) => a.index - b.index);
 
+                let densityBonus = 0;
                 // Fenêtre glissante : Si 3 occurrences dans < 50 mots
                 for (let k = 0; k < matches.length - 2; k++) {
                     const start = matches[k].index;
@@ -1024,11 +1031,13 @@
                     const distance = end - start;
 
                     if (distance < 50) {
-                        chunkScore += 30; // Gros bonus de densité
+                        densityBonus += 30; // Gros bonus de densité
                     } else if (distance < 100) {
-                        chunkScore += 15;
+                        densityBonus += 15;
                     }
                 }
+                // PLAFONNEMENT du bonus de densité pour éviter l'explosion sur les listes bibliographiques
+                chunkScore += Math.min(densityBonus, 150);
 
                 // Diversité : Bonus si on a trouvé plusieurs mots-clés DIFFÉRENTS
                 const uniqueStemsFound = new Set(matches.map(m => m.stem)).size;
