@@ -802,17 +802,19 @@
             const btn = document.getElementById("search-btn");
             const btnNoIa = document.getElementById("search-no-ia-btn");
 
+            // Accepte virgule OU espace comme séparateur
             const motsArray = mots
-                .split(/[,]+/)
+                .split(/[\s,]+/)
                 .map(m => m.trim())
-                .filter(m => m.length > 2);
+                .filter(m => m.length > 1);
 
-            // Validation : soit thème + 1 mot-clé, soit 2 mots-clés minimum
-            const isValid =
-                (theme.length > 0 && motsArray.length >= 1) ||
-                (theme.length === 0 && motsArray.length >= 2);
+            // Validation stricte :
+            // 1. Un Thème ET au moins 1 mot-clé
+            // OU
+            // 2. Au moins 2 mots-clés (sans thème obligatoire)
+            const isValid = (theme.length > 0 && motsArray.length >= 1) || (motsArray.length >= 2);
 
-            btn.disabled = !isValid;
+            if (btn) btn.disabled = !isValid;
             if (btnNoIa) btnNoIa.disabled = !isValid;
         }
 
@@ -925,7 +927,7 @@
             // On garde aussi les racines pour la comparaison
             const themeStems = expandedTheme.map(w => FrenchStemmer.stem(w));
 
-            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 1);
             const expandedKeywords = expandSynonyms(keywords);
             const keywordStems = expandedKeywords.map(w => FrenchStemmer.stem(w));
 
@@ -966,7 +968,7 @@
         function analyzeBookChunks(book, theme, mots) {
             // 1. Préparation des Stems de recherche (Racines)
             const themeWords = expandSynonyms(theme.toLowerCase().split(/[\s,]+/));
-            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+            const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 1);
             const allSearchTerms = [...new Set([...themeWords, ...expandSynonyms(keywords)])];
 
             // Map: Stem -> { originalWord, weight }
