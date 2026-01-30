@@ -857,7 +857,7 @@
         function isTableOfContentsOrBiblio(text) {
             const t = text.toLowerCase();
 
-            // 1. Regex pour repérer les lignes qui ne sont QUE des chiffres ou chiffres + symboles (numéros de page, chapitres)
+            // 1. Regex pour repérer les lignes qui ne sont QUE des chiffres ou symboles
             if (/^[\d\s\.\,\-\/]+$/.test(t)) return true;
 
             // 2. Tables des matières et structures techniques
@@ -867,19 +867,17 @@
             if (t.includes("isbn") || t.includes("tous droits réservés") || t.includes("copyright") ||
                 t.includes("dépôt légal") || t.includes("imprimé en") || t.includes("http")) return true;
 
-            // 4. NOUVEAU : Détection de listes de références (Bibliographies)
-            // Si on a beaucoup de dates (18xx, 19xx ou 20xx) dans le texte
+            // 4. Détection de listes de références / Notes (Nouveau)
+            const noteMarkers = (t.match(/\b(op\.\s*cit|ibid|p\.\s*\d+|t\.\s*[ivxlcm]+|vol\.|ed\.)/g) || []).length;
+            if (noteMarkers > 5) return true; // Trop de marqueurs de notes bibliographiques
+
+            // 5. Ratio de dates
             const dates = (t.match(/\b(18|19|20)\d{2}\b/g) || []).length;
-            if (dates > 4 && text.length < 2000) return true; // Ratio dates/longueur suspect
+            if (dates > 5 && text.length < 3000) return true;
 
-            // 5. Ratio de majuscules (Noms d'auteurs en rafale dans les notes)
+            // 6. Ratio de majuscules (Noms d'auteurs)
             const caps = (text.match(/[A-ZÀ-ÖØ-Þ]/g) || []).length;
-            if (text.length > 300 && (caps / text.length) > 0.12) return true;
-
-            // 6. Lignes trop courtes qui ne sont pas des titres
-            if (t.length < 35 && !/[.?!]$/.test(t) && !/^[A-ZÀ-ÖØ-Þ\s]+$/.test(text)) {
-                return true;
-            }
+            if (text.length > 300 && (caps / text.length) > 0.15) return true;
 
             return false;
         }
@@ -900,9 +898,9 @@
             const data = await r.json();
 
             return {
-                titre: data.metadata?.titre || filename,
-                auteur: data.metadata?.auteur || "Auteur inconnu",
-                chunks: decoupageIntelligent(data.texte_integral)
+                titre: data.titre || data.metadata?.titre || filename.replace(/\.json$/i, ""),
+                auteur: data.auteur || data.metadata?.auteur || "Auteur inconnu",
+                chunks: decoupageIntelligent(data.texte_integral || "")
             };
         }
 
@@ -1001,6 +999,8 @@
                 let matches = []; // Stocke les positions des matchs: { index, stem, weight }
 
                 // 2. Scan des mots du chunk (via Stems)
+                const wordCounts = new Map(); // Pour limiter l'impact des répétitions mécaniques
+
                 chunkWords.forEach((word, idx) => {
                     if (word.length < 3) return;
                     const stem = FrenchStemmer.stem(word);
@@ -1009,11 +1009,16 @@
                         const ref = searchMap.get(stem);
                         matches.push({ index: idx, stem: stem, weight: ref.weight, word: word });
 
-                        // Score de base (Poids du mot x 10)
-                        chunkScore += (10 * ref.weight);
+                        // CALCUL NON-LINÉAIRE : La répétition rapporte de moins en moins
+                        const count = (wordCounts.get(stem) || 0) + 1;
+                        wordCounts.set(stem, count);
 
-                        // Bonus position : Si mot important en début de paragraphe (Titre ou accroche)
-                        if (idx < 20) chunkScore += 5 * ref.weight;
+                        // On utilise la racine carrée pour écraser les listes répétitives
+                        // Un mot cité 100 fois ne rapportera plus que ~10 fois sa valeur au lieu de 100.
+                        chunkScore += (10 * ref.weight) / Math.sqrt(count);
+
+                        // Bonus position : Uniquement si c'est la PREMIÈRE fois qu'on voit le mot en début de texte
+                        if (idx < 25 && count === 1) chunkScore += 15 * ref.weight;
                     }
                 });
 
@@ -1064,10 +1069,15 @@
                 if (length >= 150 && length <= 500) chunkScore += 15; // Cœur de cible
                 else if (length < 80) chunkScore -= 10; // Trop court (risque de fragment)
 
-                // 6. Pénalité pour le "Bruit" typographique excessif
+                // 6. Pénalité pour le "Bruit" typographique proportionnel
                 const noiseChars = (chunk.match(/[\d\[\]\*\_\>\<\#]/g) || []).length;
-                if (noiseChars > 20) chunkScore -= 30; // Trop de chiffres ou symboles
+                if (noiseChars > 15) {
+                    // Pénalité sévère si beaucoup de chiffres/codes
+                    chunkScore -= (noiseChars * 2);
+                }
 
+                // 7. Arrondi final pour la lisibilité
+                chunkScore = Math.floor(chunkScore);
                 if (chunkScore > 15) {
                     scores.push({ id: i, score: chunkScore, text: chunk });
                 }
