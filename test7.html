@@ -1263,31 +1263,45 @@
                 // Préparer les extraits pour l'IA
                 document.getElementById("results-content").innerHTML = "";
 
-                const topScores1 = scores1.slice(0, CONFIG.extraitsPerBook || 3);
-                const topScores2 = scores2.slice(0, Math.max(1, (CONFIG.extraitsPerBook || 3) - 1));
+                // Préparer les extraits (Répartition Dynamique)
+                document.getElementById("results-content").innerHTML = "";
 
-                // STATISTIQUES POUR RAPPORT TECHNIQUE
+                // On combine intelligemment pour atteindre un total (ex: 5)
+                const targetTotal = (CONFIG.extraitsPerBook || 3) + 2; // Par défaut 5
+
+                let allExtraits = [];
+                let i1 = 0, i2 = 0;
+
+                // On prend alternativement dans chaque livre pour garder l'équilibre
+                // tant qu'on n'a pas atteint le total et qu'il reste des scores
+                while (allExtraits.length < targetTotal && (i1 < scores1.length || i2 < scores2.length)) {
+                    if (i1 < scores1.length) {
+                        allExtraits.push({ ...scores1[i1], livre: book1 });
+                        i1++;
+                    }
+                    if (allExtraits.length < targetTotal && i2 < scores2.length) {
+                        allExtraits.push({ ...scores2[i2], livre: book2 });
+                        i2++;
+                    }
+                }
+
+                // STATISTIQUES POUR RAPPORT TECHNIQUE (basées sur ce qui a été réellement trouvé)
                 const searchStats = {
                     book1: {
                         titre: book1.titre,
                         totalExtraits: scores1.length,
-                        affichés: topScores1.length,
+                        affichés: i1,
                         topScores: scores1.slice(0, 10).map(s => s.score),
                         scoreMax: scores1[0]?.score || 0
                     },
                     book2: {
                         titre: book2.titre,
                         totalExtraits: scores2.length,
-                        affichés: topScores2.length,
+                        affichés: i2,
                         topScores: scores2.slice(0, 10).map(s => s.score),
                         scoreMax: scores2[0]?.score || 0
                     }
                 };
-
-                const allExtraits = [
-                    ...topScores1.map(s => ({ ...s, livre: book1 })),
-                    ...topScores2.map(s => ({ ...s, livre: book2 }))
-                ];
 
                 // Traiter chaque extrait avec l'IA
                 for (let i = 0; i < allExtraits.length; i++) {
