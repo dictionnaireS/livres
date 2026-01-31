@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide & Configuration - Bibliothèque Littéraire</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-body: 'Lora', serif;
+            --font-ui: 'Outfit', sans-serif;
+            --background: 60 10% 97%;
+            --foreground: 224 30% 15%;
+            --primary: 225 39% 18%;
+            --primary-foreground: 210 40% 98%;
+            --accent: 46 65% 52%;
+            --border: 45 15% 85%;
+            --radius: 0.5rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: hsl(var(--background));
+            background-image:
+                linear-gradient(rgba(249, 249, 246, 0.95), rgba(249, 249, 246, 0.95)),
+                url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4af37' fill-opacity='0.1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+            color: hsl(var(--foreground));
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(to bottom, hsl(225 39% 22%), hsl(225 39% 15%));
+            color: white;
+            padding: 4rem 1rem;
+            text-align: center;
+            border-bottom: 4px solid hsl(var(--accent));
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-weight: 700;
+            margin-top: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            font-family: var(--font-ui);
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            color: hsl(var(--accent));
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid hsl(var(--accent));
+        }
+
+        .tab-button {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            color: #666;
+            transition: all 0.3s;
+            font-family: var(--font-ui);
+        }
+
+        .tab-button:hover {
+            background: #f8f9fa;
+            color: hsl(var(--accent));
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(46 65% 42%) 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(225 39% 25%) 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-family: var(--font-serif);
+        }
+
+        .subsection {
+            margin-bottom: 30px;
+            padding-left: 20px;
+            border-left: 4px solid hsl(var(--accent));
+        }
+
+        .subsection h3 {
+            color: hsl(var(--primary));
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-serif);
+        }
+
+        .subsection h3::before {
+            content: "▶";
+            color: hsl(var(--accent));
+            font-size: 1rem;
+        }
+
+        .info-box,
+        .warning-box,
+        .success-box {
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 5px solid;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-color: #3498db;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .number-highlight {
+            background: hsl(var(--accent));
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .config-section {
+            background: hsl(var(--background));
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px solid hsl(var(--border));
+        }
+
+        .config-section h4 {
+            color: hsl(var(--primary));
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-family: var(--font-serif);
+        }
+
+        .config-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid hsl(var(--accent));
+        }
+
+        .config-item label {
+            display: block;
+            font-weight: 600;
+            color: hsl(var(--primary));
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .config-item .description {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .config-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .slider-container {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: hsl(var(--accent));
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: hsl(var(--accent));
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            background: hsl(var(--accent));
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .preset-btn {
+            padding: 25px;
+            border: 2px solid hsl(var(--accent));
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: hsl(var(--accent));
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .preset-btn h5 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            font-family: var(--font-serif);
+        }
+
+        .preset-btn p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .preset-btn:hover p {
+            color: white;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: var(--font-ui);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(46 65% 42%) 100%);
+            color: white;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px 30px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+            display: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .current-values-box {
+            background: white;
+            border: 2px solid hsl(var(--accent));
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .current-values-box h4 {
+            color: hsl(var(--accent));
+            margin-bottom: 15px;
+            font-family: var(--font-serif);
+        }
+
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .value-item {
+            background: hsl(var(--background));
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .value-item strong {
+            color: hsl(var(--accent));
+        }
+
+        .step-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(46 65% 42%) 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.5rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                width: 100%;
+            }
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+
+        ul,
+        ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <p>Guide & Configuration</p>
+        <h1>Bibliothèque Littéraire</h1>
+        <p style="font-size: 0.95rem; margin-top: 1rem; opacity: 0.85; letter-spacing: 0.05em;">
+            Théologie · Spiritualité · Philosophie religieuse
+        </p>
+    </header>
+
+    <div class="container">
+        <!-- NOTIFICATION -->
+        <div id="notification" class="notification"></div>
+
+        <!-- ONGLETS -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('guide')">📖 Guide d'utilisation</button>
+            <button class="tab-button" onclick="switchTab('config')">⚙️ Configuration</button>
+        </div>
+
+        <!-- ONGLET GUIDE -->
+        <div id="tab-guide" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">Comment fonctionne l'outil ?</h2>
+
+                <div class="subsection">
+                    <h3>🎯 Vue d'ensemble</h3>
+                    <p>Cet outil recherche automatiquement des passages pertinents dans une bibliothèque de livres
+                        théologiques, spirituels et philosophiques.</p>
+
+                    <div class="info-box">
+                        <strong>🎁 Ce que vous recevez :</strong>
+                        <ul>
+                            <li><span class="number-highlight">5 extraits</span> au total par recherche</li>
+                            <li>Chaque extrait fait environ <span class="number-highlight">3 000 caractères</span>
+                                (400-500 mots)</li>
+                            <li>Un fichier PDF téléchargeable avec tous les extraits</li>
+                            <li>Des informations sur les livres consultés</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>🔄 Les étapes du processus</h3>
+
+                    <div class="step-container">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <strong>Saisie des critères</strong>
+                            <p>Vous renseignez :</p>
+                            <ul>
+                                <li>Une <strong>thématique</strong> (ex: "Oraison", "Contemplation")</li>
+                                <li>Des <strong>mots-clés</strong> séparés par des virgules (ex: "grâce, union,
+                                    silence")</li>
+                                <li>Alternative : au moins <strong>2 mots-clés</strong> sans thématique</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <strong>Sélection intelligente des livres</strong>
+                            <p>Le système :</p>
+                            <ul>
+                                <li>Charge l'index de tous les livres disponibles</li>
+                                <li>Calcule un score pour chaque livre selon vos critères</li>
+                                <li>Sélectionne les <span class="number-highlight">10 meilleurs livres</span></li>
+                                <li>Choisit <span class="number-highlight">2 livres au hasard</span> parmi ces 10</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <strong>Enrichissement avec les synonymes</strong>
+                            <p>Le système élargit automatiquement la recherche grâce à un dictionnaire de <span
+                                    class="number-highlight">200+ concepts spirituels</span> :</p>
+                            <div class="success-box">
+                                <strong>Exemple :</strong><br>
+                                Vous cherchez : "oraison"<br>
+                                Le système cherche aussi : prière, méditation, contemplation, recueillement, dévotion,
+                                supplication, invocation
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <strong>Découpage et analyse</strong>
+                            <p>Chaque livre est découpé en segments de <span class="number-highlight">~5 000
+                                    caractères</span> (700-800 mots), puis chaque segment reçoit un score basé sur :</p>
+                            <ul>
+                                <li>Occurrences des mots thématiques : <span class="number-highlight">+12 points</span>
+                                    chacune</li>
+                                <li>Occurrences des mots-clés : <span class="number-highlight">+15 points</span> chacune
+                                </li>
+                                <li>Présence de citations scripturaires : <span class="number-highlight">+20
+                                        points</span></li>
+                                <li>Vocabulaire théologique riche : <span class="number-highlight">+5 points</span> par
+                                    terme</li>
+                                <li>Longueur optimale (80-350 mots) : <span class="number-highlight">+10 points</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <strong>Sélection des meilleurs passages</strong>
+                            <ul>
+                                <li>Les <span class="number-highlight">3 meilleurs</span> segments du 1er livre</li>
+                                <li>Les <span class="number-highlight">2 meilleurs</span> segments du 2e livre</li>
+                                <li>Total : <span class="number-highlight">5 extraits</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <strong>Traitement par IA (optionnel)</strong>
+
+                            <div class="warning-box">
+                                <strong>⚙️ Mode Hybride :</strong><br>
+                                • Les <strong>3 premiers extraits</strong> sont bruts (non traités par IA)<br>
+                                • Les <strong>2 derniers extraits</strong> sont raffinés par l'IA<br>
+                                • L'IA reçoit <span class="number-highlight">6 000 caractères</span> maximum<br>
+                                • L'IA extrait un passage de <span class="number-highlight">250-600 mots</span><br>
+                                • L'IA fournit un contexte historique/théologique (40-60 mots)
+                            </div>
+
+                            <div class="info-box">
+                                <strong>🔄 Système de secours :</strong><br>
+                                Le système essaie <span class="number-highlight">8 modèles d'IA différents</span> dans
+                                l'ordre. Si tous échouent, l'extrait brut est conservé.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-container">
+                        <div class="step-number">7</div>
+                        <div class="step-content">
+                            <strong>Affichage et PDF</strong>
+                            <ul>
+                                <li>Extraits bruts : marqués "📄 Extrait original"</li>
+                                <li>Extraits IA : marqués "✨ Extrait raffiné par IA" avec contexte</li>
+                                <li>Génération d'un PDF avec page de garde, table des matières et tous les extraits</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>⚡ Les deux modes de fonctionnement</h3>
+
+                    <div class="info-box">
+                        <h4 style="margin-bottom: 10px;">MODE SANS IA (rapide)</h4>
+                        <ul>
+                            <li>5 extraits bruts raccourcis à 4 000 caractères</li>
+                            <li>Affichage instantané</li>
+                            <li>Temps total : <strong>environ 30 secondes</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="success-box" style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px;">MODE AVEC IA (précis)</h4>
+                        <ul>
+                            <li>3 extraits bruts + 2 extraits raffinés par IA</li>
+                            <li>Contexte historique/théologique fourni</li>
+                            <li>Passages soigneusement sélectionnés</li>
+                            <li>Temps total : <strong>environ 2 minutes</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET CONFIGURATION -->
+        <div id="tab-config" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">⚙️ Configuration des paramètres</h2>
+
+                <!-- PROFILS PRÉDÉFINIS -->
+                <div class="subsection">
+                    <h3>🎯 Profils prédéfinis</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Choisissez un profil optimisé selon vos besoins.</p>
+
+                    <div class="preset-buttons">
+                        <div class="preset-btn" onclick="applyPreset('rapide')">
+                            <h5>🚀 Rapide</h5>
+                            <p>Résultats en 20-30 secondes<br>Extraits bruts uniquement</p>
+                        </div>
+                        <div class="preset-btn" onclick="applyPreset('equilibre')">
+                            <h5>⚖️ Équilibré</h5>
+                            <p>Résultats en 1-2 minutes<br>Configuration par défaut</p>
+                        </div>
+                        <div class="preset-btn" onclick="applyPreset('precis')">
+                            <h5>🎯 Précis & Complet</h5>
+                            <p>Résultats en 2-3 minutes<br>Scoring élevé, extraits longs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VALEURS ACTUELLES -->
+                <div class="current-values-box">
+                    <h4>📊 Paramètres actuellement enregistrés</h4>
+                    <div class="value-grid" id="currentValues"></div>
+                </div>
+
+                <!-- PARAMÈTRES DES EXTRAITS -->
+                <div class="config-section">
+                    <h4>📄 Paramètres des extraits</h4>
+
+                    <div class="config-item">
+                        <label>Longueur maximale d'un extrait brut (caractères)</label>
+                        <div class="description">Environ 400-500 mots pour 3000 caractères (recommandé: 2000-5000)</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="maxExtrait" min="1000" max="6000" step="500" value="3000"
+                                    oninput="updateValue('maxExtrait')">
+                            </div>
+                            <div class="value-display" id="value-maxExtrait">3000</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Longueur du texte envoyé à l'IA (caractères)</label>
+                        <div class="description">Contexte fourni à l'IA pour extraction (doit être > extrait brut)</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="maxSegment" min="3000" max="10000" step="500" value="6000"
+                                    oninput="updateValue('maxSegment')">
+                            </div>
+                            <div class="value-display" id="value-maxSegment">6000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PARAMÈTRES D'AFFICHAGE -->
+                <div class="config-section">
+                    <h4>🎨 Paramètres d'affichage</h4>
+
+                    <div class="config-item">
+                        <label>Vitesse d'animation (millisecondes)</label>
+                        <div class="description">Délai d'affichage pour les extraits IA (5 = rapide, 50 = lent)</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="typingSpeed" min="1" max="50" value="10"
+                                    oninput="updateValue('typingSpeed')">
+                            </div>
+                            <div class="value-display" id="value-typingSpeed">10 ms</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Caractères par bloc</label>
+                        <div class="description">Nombre de caractères ajoutés simultanément (5 = fluide, 50 = rapide)
+                        </div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="charsPerTick" min="1" max="50" value="10"
+                                    oninput="updateValue('charsPerTick')">
+                            </div>
+                            <div class="value-display" id="value-charsPerTick">10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PARAMÈTRES DE RECHERCHE -->
+                <div class="config-section">
+                    <h4>🔍 Paramètres de recherche et scoring</h4>
+
+                    <div class="config-item">
+                        <label>Points par mot thématique</label>
+                        <div class="description">Score attribué à chaque occurrence d'un mot de la thématique</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="pointsTheme" min="5" max="30" value="12"
+                                    oninput="updateValue('pointsTheme')">
+                            </div>
+                            <div class="value-display" id="value-pointsTheme">×12</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Points par mot-clé</label>
+                        <div class="description">Score attribué à chaque occurrence d'un mot-clé</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="pointsKeyword" min="5" max="30" value="15"
+                                    oninput="updateValue('pointsKeyword')">
+                            </div>
+                            <div class="value-display" id="value-pointsKeyword">×15</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Bonus citations scripturaires</label>
+                        <div class="description">Points bonus pour les passages contenant des références bibliques</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="bonusScripture" min="0" max="50" step="5" value="20"
+                                    oninput="updateValue('bonusScripture')">
+                            </div>
+                            <div class="value-display" id="value-bonusScripture">+20</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Bonus vocabulaire théologique</label>
+                        <div class="description">Points bonus par terme théologique riche détecté</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="bonusTheo" min="0" max="20" value="5"
+                                    oninput="updateValue('bonusTheo')">
+                            </div>
+                            <div class="value-display" id="value-bonusTheo">+5</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Score minimal requis</label>
+                        <div class="description">Score minimum pour qu'un segment soit retenu (5 = permissif, 50 =
+                            strict)</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="scoreMin" min="5" max="100" step="5" value="10"
+                                    oninput="updateValue('scoreMin')">
+                            </div>
+                            <div class="value-display" id="value-scoreMin">10</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Nombre de livres dans le top</label>
+                        <div class="description">Nombre de meilleurs livres sélectionnés avant tirage aléatoire</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="topBooks" min="5" max="20" value="10"
+                                    oninput="updateValue('topBooks')">
+                            </div>
+                            <div class="value-display" id="value-topBooks">10</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Extraits par livre</label>
+                        <div class="description">Nombre d'extraits à tirer de chaque livre (recommandé: 2 ou 3)</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="extraitsPerBook" min="1" max="5" value="3"
+                                    oninput="updateValue('extraitsPerBook')">
+                            </div>
+                            <div class="value-display" id="value-extraitsPerBook">3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOUVEAU : PARAMÈTRES DE FILTRAGE AVANCÉ -->
+                <div class="config-section">
+                    <h4>🛡️ Filtrage et Qualité (Anti-Bibliographies)</h4>
+
+                    <div class="config-item">
+                        <label>Score maximal autorisé (Plafond)</label>
+                        <div class="description">Un score trop élevé (>800) indique souvent une liste répétitive
+                            (bibliographie)</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="maxScoreAllowed" min="300" max="1500" step="50" value="800"
+                                    oninput="updateValue('maxScoreAllowed')">
+                            </div>
+                            <div class="value-display" id="value-maxScoreAllowed">800</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Diversité lexicale minimale</label>
+                        <div class="description">Ratio mots uniques / mots totaux (0.35 = 35%). En dessous, c'est une
+                            liste.</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="minLexicalDiversity" min="0.1" max="0.6" step="0.05"
+                                    value="0.35" oninput="updateValue('minLexicalDiversity')">
+                            </div>
+                            <div class="value-display" id="value-minLexicalDiversity">0.35</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Multiplicateur mots communs</label>
+                        <div class="description">Poids des mots comme "Dieu", "Amour", "Vie". Augmentez pour valoriser
+                            ces thèmes banaux.</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="commonWordWeight" min="0.5" max="2.0" step="0.1" value="1.0"
+                                    oninput="updateValue('commonWordWeight')">
+                            </div>
+                            <div class="value-display" id="value-commonWordWeight">1.0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PARAMÈTRES IA -->
+                <div class="config-section">
+                    <h4>🤖 Paramètres Intelligence Artificielle</h4>
+
+                    <div class="config-item">
+                        <label>Timeout API (millisecondes)</label>
+                        <div class="description">Temps d'attente maximum pour une réponse IA</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="apiTimeout" min="10000" max="60000" step="5000" value="45000"
+                                    oninput="updateValue('apiTimeout')">
+                            </div>
+                            <div class="value-display" id="value-apiTimeout">45000 ms</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Délai entre tentatives (millisecondes)</label>
+                        <div class="description">Pause entre chaque appel IA pour éviter les rate limits</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="apiRetryDelay" min="1000" max="10000" step="1000" value="5000"
+                                    oninput="updateValue('apiRetryDelay')">
+                            </div>
+                            <div class="value-display" id="value-apiRetryDelay">5000 ms</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Température IA</label>
+                        <div class="description">Créativité de l'IA (0.1 = très précis, 0.5 = plus créatif)</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="temperatureIA" min="0.1" max="1" step="0.1" value="0.1"
+                                    oninput="updateValue('temperatureIA')">
+                            </div>
+                            <div class="value-display" id="value-temperatureIA">0.1</div>
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Tokens maximum par réponse</label>
+                        <div class="description">Longueur maximale de la réponse de l'IA</div>
+                        <div class="config-controls">
+                            <div class="slider-container">
+                                <input type="range" id="maxTokens" min="500" max="4000" step="500" value="2000"
+                                    oninput="updateValue('maxTokens')">
+                            </div>
+                            <div class="value-display" id="value-maxTokens">2000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOUTONS D'ACTION -->
+                <div class="action-buttons">
+                    <button class="action-btn btn-save" onclick="saveConfig()">
+                        💾 Enregistrer la configuration
+                    </button>
+                    <button class="action-btn btn-reset" onclick="resetConfig()">
+                        🔄 Réinitialiser aux valeurs par défaut
+                    </button>
+                    <button class="action-btn btn-export" onclick="exportConfig()">
+                        📥 Exporter en JSON
+                    </button>
+                </div>
+
+                <div class="info-box" style="margin-top: 30px;">
+                    <strong>ℹ️ Comment utiliser cette configuration ?</strong><br>
+                    1. Ajustez les paramètres selon vos besoins<br>
+                    2. Cliquez sur "Enregistrer la configuration"<br>
+                    3. Les paramètres seront automatiquement utilisés par l'outil de recherche<br>
+                    4. Vous pouvez exporter la configuration en JSON pour la partager
+                </div>
+
+                <!-- RÉCAPITULATIF DES OPTIMISATIONS -->
+                <div class="subsection" style="margin-top: 40px;">
+                    <h3>⚡ Récapitulatif des optimisations</h3>
+
+                    <div class="success-box">
+                        <h4 style="margin-bottom: 10px; color: #28a745;">🚀 Pour une recherche PLUS RAPIDE :</h4>
+                        <ul>
+                            <li><code>maxExtrait = 2000</code> (extraits courts)</li>
+                            <li><code>maxSegment = 4000</code> (moins de contexte IA)</li>
+                            <li><code>typingSpeed = 5</code> et <code>charsPerTick = 20</code></li>
+                            <li>Utiliser le mode <strong>SANS IA</strong></li>
+                        </ul>
+                        <strong>Temps estimé : 20-30 secondes</strong>
+                    </div>
+
+                    <div class="info-box" style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px; color: #3498db;">🎯 Pour des résultats PLUS PRÉCIS :</h4>
+                        <ul>
+                            <li><code>pointsTheme = 15</code> (plus de poids thématique)</li>
+                            <li><code>pointsKeyword = 20</code> (focus mots-clés)</li>
+                            <li><code>bonusScripture = 30</code> (privilégier les citations)</li>
+                            <li><code>scoreMin = 25</code> (seuil élevé)</li>
+                            <li>Utiliser le mode <strong>AVEC IA</strong></li>
+                        </ul>
+                        <strong>Temps estimé : 2-3 minutes</strong>
+                    </div>
+
+                    <div class="warning-box" style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px; color: #ffc107;">📚 Pour des extraits PLUS LONGS :</h4>
+                        <ul>
+                            <li><code>maxExtrait = 5000</code> (environ 700 mots)</li>
+                            <li><code>maxSegment = 8000</code> (plus de contexte)</li>
+                            <li><code>maxTokens = 3000</code> (réponses IA plus longues)</li>
+                        </ul>
+                        <strong>Impact : Extraits d'environ 700-800 mots</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer
+        style="text-align: center; padding: 2rem 1rem; font-family: var(--font-ui); font-size: 0.8rem; color: hsl(var(--foreground) / 0.5); border-top: 1px solid hsl(var(--border)); margin-top: 4rem;">
+        <p><strong>Bibliothèque Littéraire IA</strong> - Guide & Configuration</p>
+        <p style="margin-top: 0.5rem;">Théologie · Spiritualité · Philosophie religieuse</p>
+        <p style="margin-top: 1rem; font-size: 0.75rem;"><strong>Gildas R.</strong> · Janvier 2026</p>
+    </footer>
+
+    <script>
+        // CONFIGURATION PAR DÉFAUT
+        const DEFAULT_CONFIG = {
+            maxExtrait: 3000,
+            maxSegment: 6000,
+            typingSpeed: 10,
+            charsPerTick: 10,
+            pointsTheme: 12,
+            pointsKeyword: 15,
+            bonusScripture: 20,
+            bonusTheo: 5,
+            scoreMin: 10,
+            topBooks: 10,
+            extraitsPerBook: 3,
+            maxScoreAllowed: 800,
+            minLexicalDiversity: 0.35,
+            commonWordWeight: 1.0,
+            apiTimeout: 45000,
+            apiRetryDelay: 5000,
+            temperatureIA: 0.1,
+            maxTokens: 2000
+        };
+
+        // PROFILS PRÉDÉFINIS
+        const PRESETS = {
+            rapide: {
+                maxExtrait: 2000,
+                maxSegment: 4000,
+                typingSpeed: 5,
+                charsPerTick: 20,
+                pointsTheme: 10,
+                pointsKeyword: 12,
+                bonusScripture: 15,
+                bonusTheo: 3,
+                scoreMin: 10,
+                topBooks: 8,
+                extraitsPerBook: 2,
+                maxScoreAllowed: 1000,
+                minLexicalDiversity: 0.3,
+                commonWordWeight: 0.8,
+                apiTimeout: 30000,
+                apiRetryDelay: 3000,
+                temperatureIA: 0.1,
+                maxTokens: 1500
+            },
+            equilibre: {
+                ...DEFAULT_CONFIG
+            },
+            precis: {
+                maxExtrait: 5000,
+                maxSegment: 8000,
+                typingSpeed: 10,
+                charsPerTick: 10,
+                pointsTheme: 15,
+                pointsKeyword: 20,
+                bonusScripture: 30,
+                bonusTheo: 8,
+                scoreMin: 25,
+                topBooks: 15,
+                extraitsPerBook: 3,
+                maxScoreAllowed: 700,
+                minLexicalDiversity: 0.4,
+                commonWordWeight: 1.2,
+                apiTimeout: 60000,
+                apiRetryDelay: 6000,
+                temperatureIA: 0.1,
+                maxTokens: 3000
+            }
+        };
+
+        // CHARGEMENT INITIAL
+        window.addEventListener('load', () => {
+            loadConfig();
+            updateCurrentValuesDisplay();
+        });
+
+        // GESTION DES ONGLETS
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // MISE À JOUR DE L'AFFICHAGE DES VALEURS
+        function updateValue(id) {
+            const input = document.getElementById(id);
+            const display = document.getElementById('value-' + id);
+            let value = input.value;
+
+            // Formatage selon le type
+            if (id.includes('Speed') || id.includes('Timeout') || id.includes('Delay')) {
+                display.textContent = value + ' ms';
+            } else if (id.includes('points') || id === 'bonusScripture' || id === 'bonusTheo' || id === 'pointsTheme' || id === 'pointsKeyword') {
+                display.textContent = (id.includes('points') || id.includes('Keyword') || id.includes('Theme') ? '×' : '+') + value;
+            } else if (id === 'temperatureIA' || id === 'minLexicalDiversity' || id === 'commonWordWeight') {
+                display.textContent = parseFloat(value).toFixed(2);
+            } else {
+                display.textContent = value;
+            }
+        }
+
+        // APPLICATION D'UN PROFIL PRÉDÉFINI
+        function applyPreset(presetName) {
+            const preset = PRESETS[presetName];
+
+            Object.keys(preset).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = preset[key];
+                    updateValue(key);
+                }
+            });
+
+            showNotification(`Profil "${presetName}" appliqué ! N'oubliez pas d'enregistrer.`);
+        }
+
+        // SAUVEGARDE DE LA CONFIGURATION
+        function saveConfig() {
+            const config = {};
+
+            Object.keys(DEFAULT_CONFIG).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    config[key] = parseFloat(input.value);
+                }
+            });
+
+            localStorage.setItem('bibliotheque_config', JSON.stringify(config));
+
+            updateCurrentValuesDisplay();
+            showNotification('✅ Configuration enregistrée avec succès !');
+        }
+
+        // CHARGEMENT DE LA CONFIGURATION
+        function loadConfig() {
+            const saved = localStorage.getItem('bibliotheque_config');
+            const config = saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+
+            Object.keys(config).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = config[key];
+                    updateValue(key);
+                }
+            });
+        }
+
+        // RÉINITIALISATION
+        function resetConfig() {
+            if (confirm('Voulez-vous vraiment réinitialiser tous les paramètres aux valeurs par défaut ?')) {
+                Object.keys(DEFAULT_CONFIG).forEach(key => {
+                    const input = document.getElementById(key);
+                    if (input) {
+                        input.value = DEFAULT_CONFIG[key];
+                        updateValue(key);
+                    }
+                });
+                showNotification('🔄 Paramètres réinitialisés. N\'oubliez pas d\'enregistrer.');
+            }
+        }
+
+        // EXPORT EN JSON
+        function exportConfig() {
+            const config = {};
+
+            Object.keys(DEFAULT_CONFIG).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    config[key] = parseFloat(input.value);
+                }
+            });
+
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'config_bibliotheque_' + new Date().toISOString().split('T')[0] + '.json';
+            link.click();
+            URL.revokeObjectURL(url);
+
+            showNotification('📥 Configuration exportée en JSON');
+        }
+
+        // AFFICHAGE DES VALEURS ACTUELLES
+        function updateCurrentValuesDisplay() {
+            const saved = localStorage.getItem('bibliotheque_config');
+            const config = saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+
+            const labels = {
+                maxExtrait: 'Longueur extrait (chars)',
+                maxSegment: 'Texte IA (chars)',
+                typingSpeed: 'Vitesse animation (ms)',
+                charsPerTick: 'Caractères/bloc',
+                pointsTheme: 'Points thématique',
+                pointsKeyword: 'Points mots-clés',
+                bonusScripture: 'Bonus citations',
+                bonusTheo: 'Bonus théologie',
+                scoreMin: 'Score minimal',
+                topBooks: 'Livres dans top',
+                extraitsPerBook: 'Extraits par livre',
+                maxScoreAllowed: 'Score max autorisé',
+                minLexicalDiversity: 'Diversité lexicale min',
+                commonWordWeight: 'Poids mots communs',
+                apiTimeout: 'Timeout API (ms)',
+                apiRetryDelay: 'Délai retry (ms)',
+                temperatureIA: 'Température IA',
+                maxTokens: 'Tokens max'
+            };
+
+            const container = document.getElementById('currentValues');
+            container.innerHTML = Object.keys(config).map(key => `
+                <div class="value-item">
+                    <strong>${labels[key]}:</strong> ${config[key]}
+                </div>
+            `).join('');
+        }
+
+        // NOTIFICATION
+        function showNotification(message) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.style.display = 'block';
+
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 3000);
+        }
+
+        // FONCTION POUR RÉCUPÉRER LA CONFIG (à utiliser dans l'outil principal)
+        function getConfig() {
+            const saved = localStorage.getItem('bibliotheque_config');
+            return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+        }
+    </script>
+</body>
+
+</html>

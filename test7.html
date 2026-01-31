@@ -535,12 +535,33 @@
         const CONFIG = (() => {
             const saved = localStorage.getItem('bibliotheque_config');
             return saved ? JSON.parse(saved) : {
-                maxExtrait: 3000,
-                maxSegment: 6000,
+                // CONFIGURATION IDÉALE (PAR DÉFAUT)
+                maxExtrait: 4000,          // Assez long pour du contexte
+                maxSegment: 8000,          // Large fenêtre pour l'IA
                 typingSpeed: 10,
                 charsPerTick: 10,
-                apiTimeout: 45000,
-                apiRetryDelay: 5000
+
+                // Scoring agressif pour la pertinence
+                pointsTheme: 15,           // Renforcé
+                pointsKeyword: 20,         // Renforcé
+                bonusScripture: 25,        // Citations valorisées
+                bonusTheo: 8,              // Vocabulaire riche valorisé
+                scoreMin: 12,              // Seuil un peu plus strict
+
+                // Sélection
+                topBooks: 15,              // Plus de livres candidats
+                extraitsPerBook: 3,        // 3 extraits par livre (mixte IA/Brut)
+
+                // Anti-Bruit & Qualité
+                maxScoreAllowed: 800,      // Le filtre anti-bibliographie
+                minLexicalDiversity: 0.35, // Filtre répétition
+                commonWordWeight: 1.2,     // Boost "Dieu", "Amour" (x1.2)
+
+                // IA
+                apiTimeout: 60000,
+                apiRetryDelay: 5000,
+                temperatureIA: 0.1,
+                maxTokens: 3000
             };
         })();
 
@@ -697,7 +718,13 @@
         function getWordWeight(word) {
             // Normaliser pour la recherche dans le dictionnaire
             const norm = word.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return WORD_WEIGHTS[norm] || 1.2; // 1.2 est le poids standard un peu boosté
+            const weight = WORD_WEIGHTS[norm] || 1.2;
+
+            // Appliquer le multiplicateur global pour les mots communs (s'ils sont dans la liste)
+            if (WORD_WEIGHTS[norm] && WORD_WEIGHTS[norm] < 2.0) {
+                return weight * (CONFIG.commonWordWeight || 1.0);
+            }
+            return weight;
         }
 
 
@@ -981,30 +1008,31 @@
 
                 // Priorité au thème (poids plus important)
                 themeStems.forEach(stem => {
-                    if (metadataStems.includes(stem)) score += 15;
+                    if (metadataStems.includes(stem)) score += (CONFIG.pointsTheme || 15);
                 });
 
                 // Mots-clés
                 keywordStems.forEach(stem => {
                     // Si racine trouvée
                     if (metadataStems.includes(stem)) {
-                        score += 15;
+                        score += (CONFIG.pointsKeyword || 15);
                         // Si c'est dans le TITRE spécifiquement (bonus x2)
                         const titleStems = (book.titre || "").toLowerCase().split(/\W+/).map(w => FrenchStemmer.stem(w));
                         if (titleStems.includes(stem)) {
-                            score += 25;
+                            score += (CONFIG.pointsKeyword || 15) * 1.5;
                         }
                     }
                 });
 
                 // Bonus pour les ouvrages théologiques/spirituels classiques
-                if (/saint|p[èe]re|théologie|mystique|docteur/.test(metadataText)) score += 5;
+                if (/saint|p[èe]re|théologie|mystique|docteur/.test(metadataText)) score += (CONFIG.bonusTheo || 5);
 
                 return { book, score };
             }).sort((a, b) => b.score - a.score);
 
-            const top10 = scoredBooks.slice(0, 10);
-            return top10.sort(() => Math.random() - 0.5).slice(0, 2).map(x => x.book);
+            const topLimit = CONFIG.topBooks || 10;
+            const topN = scoredBooks.slice(0, topLimit);
+            return topN.sort(() => Math.random() - 0.5).slice(0, 2).map(x => x.book);
         }
 
         function analyzeBookChunks(book, theme, mots) {
@@ -1013,14 +1041,19 @@
             const keywords = mots.toLowerCase().split(/[\s,]+/).filter(w => w.length > 1);
             const allSearchTerms = [...new Set([...themeWords, ...expandSynonyms(keywords)])];
 
-            // Map: Stem -> { originalWord, weight }
+            // Map: Stem -> { originalWord, weight, isTheme }
             const searchMap = new Map();
-            allSearchTerms.forEach(term => {
+            themeWords.forEach(term => {
                 const stem = FrenchStemmer.stem(term);
-                // On garde le mot complet pour l'affichage ou debug, et le poids max si conflit
                 const weight = getWordWeight(term);
-                if (!searchMap.has(stem) || searchMap.get(stem).weight < weight) {
-                    searchMap.set(stem, { word: term, weight });
+                searchMap.set(stem, { word: term, weight, points: CONFIG.pointsTheme || 12 });
+            });
+            keywords.forEach(term => {
+                const stem = FrenchStemmer.stem(term);
+                const weight = getWordWeight(term);
+                // Si déjà présent (thème), on garde le plus haut point
+                if (!searchMap.has(stem) || searchMap.get(stem).points < (CONFIG.pointsKeyword || 15)) {
+                    searchMap.set(stem, { word: term, weight, points: CONFIG.pointsKeyword || 15 });
                 }
             });
 
@@ -1053,11 +1086,11 @@
 
                         // On utilise la racine carrée pour écraser les listes répétitives
                         // Un mot cité 100 fois ne rapportera plus que ~10 fois sa valeur au lieu de 100.
-                        // MULTIPLICATEUR AUGMENTÉ de 10 à 15 pour aider les mots "banaux"
-                        chunkScore += (15 * ref.weight) / Math.sqrt(count);
+                        // MULTIPLICATEUR DYNAMIQUE (pointsTheme ou pointsKeyword)
+                        chunkScore += (ref.points * ref.weight) / Math.sqrt(count);
 
                         // Bonus position : Uniquement si c'est la PREMIÈRE fois qu'on voit le mot en début de texte
-                        if (idx < 25 && count === 1) chunkScore += 15 * ref.weight;
+                        if (idx < 25 && count === 1) chunkScore += (ref.points * 1.2);
                     }
                 });
 
@@ -1094,13 +1127,13 @@
                 // Citations bibliques (ex: Mt 5, 3 ou Jean 3:16)
                 const bibleRegex1 = /\b(gen(èse)?|ex(ode)?|lév(itique)?|nb|nom(bres)?|dt|deut(éronome)?|jos(ué)?|jg|jug(es)?|rt|ruth|sam(uel)?|roi(s)?|chr(oniques)?|esd(ras)?|néh(émie)?|tob(ie)?|jdt|judith|est(her)?|mac(chabées)?|job|ps(aumes)?|prov(erbes)?|eccl(ésiaste)?|cant(ique)?|sag(esse)?|sir(acide)?|is(aïe)?|jér(émie)?|lam(entations)?|bar(uch)?|ez(échiel)?|dan(iel)?|os(ée)?|joël|am(os)?|abd(ias)?|jon(as)?|mich(ée)?|nah(um)?|hab(acuc)?|soph(onie)?|agg(ée)?|zach(arie)?|mal(achie)?|mt|mat(thieu)?|mc|marc|lc|luc|jn|jean|act(es)?|rm|rom(ains)?|co(rinthiens)?|ga(lates)?|eph(ésiens)?|ph(ilippiens)?|col(ossiens)?|th(essaloniciens)?|tim(othée)?|ti(te)?|phm|ph(ilémon)?|héb(reux)?|jac(ques)?|pie(rre)?|jude|ap(ocalypse)?)\s+\d+/gi;
                 if (bibleRegex1.test(chunk)) {
-                    chunkScore += 25;
+                    chunkScore += (CONFIG.bonusScripture || 25);
                 }
 
                 // Citations Patristiques probables (Guillemets + Majuscule)
                 const patristicQuote = /«\s*[A-Z]/g;
                 const quoteCount = (chunk.match(patristicQuote) || []).length;
-                if (quoteCount > 0) chunkScore += (quoteCount * 5);
+                if (quoteCount > 0) chunkScore += (quoteCount * (CONFIG.bonusTheo || 5));
 
 
                 // 5. Qualité du texte (Longueur idéale)
@@ -1118,7 +1151,7 @@
                 // 7. DÉTECTION PAR SCORE ANORMAL (Bibliographies)
                 // Les bibliographies obtiennent des scores très élevés (>800-1000) à cause de la répétition
                 // C'est un signal : si le score est trop élevé, c'est probablement une liste, pas du texte authentique
-                if (chunkScore > 800) {
+                if (chunkScore > (CONFIG.maxScoreAllowed || 800)) {
                     console.log(`⚠️ Score anormalement élevé (${chunkScore}) détecté - probable bibliographie, rejeté`);
                     return; // Rejeter ce chunk
                 }
@@ -1131,15 +1164,15 @@
                 const lexicalDiversity = totalWords > 0 ? uniqueWords / totalWords : 0;
 
                 // Si moins de 35% de mots uniques = Liste répétitive (bibliographie, notes)
-                if (lexicalDiversity < 0.35 && totalWords > 50) {
+                if (lexicalDiversity < (CONFIG.minLexicalDiversity || 0.35) && totalWords > 50) {
                     console.log(`⚠️ Diversité lexicale faible (${(lexicalDiversity * 100).toFixed(1)}%) - probable liste, rejeté`);
                     return;
                 }
 
                 // 9. Arrondi final pour la lisibilité
                 chunkScore = Math.floor(chunkScore);
-                // SEUIL ABAISSÉ (était 15) pour accepter plus de résultats pertinents mais courts
-                if (chunkScore > 8) {
+                // SEUIL DYNAMIQUE (CONFIG.scoreMin)
+                if (chunkScore >= (CONFIG.scoreMin || 8)) {
                     scores.push({ id: i, score: chunkScore, text: chunk });
                 }
             });
@@ -1230,8 +1263,8 @@
                 // Préparer les extraits pour l'IA
                 document.getElementById("results-content").innerHTML = "";
 
-                const topScores1 = scores1.slice(0, 3);
-                const topScores2 = scores2.slice(0, 2);
+                const topScores1 = scores1.slice(0, CONFIG.extraitsPerBook || 3);
+                const topScores2 = scores2.slice(0, Math.max(1, (CONFIG.extraitsPerBook || 3) - 1));
 
                 // STATISTIQUES POUR RAPPORT TECHNIQUE
                 const searchStats = {
@@ -1271,8 +1304,9 @@
                         i + 1
                     );
 
-                    // LOGIQUE HYBRIDE : 3 premiers SANS IA, 2 derniers AVEC IA (sauf si forceNoIA)
-                    if (i >= 3 && !forceNoIA) {
+                    // LOGIQUE HYBRIDE : Les premiers SANS IA, les derniers AVEC IA
+                    const splitPoint = Math.ceil(allExtraits.length / 2);
+                    if (i >= splitPoint && !forceNoIA) {
                         // Mode AVEC IA (les 2 derniers)
                         try {
                             const resultat = await raffinerExtraitAvecIA(
@@ -1542,8 +1576,8 @@ FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
                         body: JSON.stringify({
                             model: model,
                             prompt: prompt,
-                            max_tokens: 2000,
-                            temperature: 0.1
+                            max_tokens: CONFIG.maxTokens || 2000,
+                            temperature: CONFIG.temperatureIA || 0.1
                         })
                     });
 
