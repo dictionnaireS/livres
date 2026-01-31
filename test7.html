@@ -649,12 +649,12 @@
            NOUVEAU : CONFIGURATION SCORE & STEMMER
         ======================= */
 
-        // 1. Pondération par rareté (TF-IDF Manuel & Simplifié)
+        // 1. Pondération par rareté (TF-IDF Manuel & Simplifié) - Ajusté moins sévère
         const WORD_WEIGHTS = {
-            // Mots très communs (Coefficient faible)
-            "dieu": 0.5, "seigneur": 0.6, "vie": 0.4, "amour": 0.5, "lumiere": 0.5,
-            "esprit": 0.5, "foi": 0.7, "coeur": 0.5, "ame": 0.6, "monde": 0.4,
-            "homme": 0.4, "femme": 0.4, "chose": 0.2, "bien": 0.3, "mal": 0.3,
+            // Mots communs mais importants (Coefficient remonté) - Était 0.4-0.6, maintenant 0.8-1.0
+            "dieu": 1.0, "seigneur": 1.0, "vie": 0.8, "amour": 0.9, "lumiere": 0.9,
+            "esprit": 0.9, "foi": 1.0, "coeur": 0.8, "ame": 0.9, "monde": 0.7,
+            "homme": 0.7, "femme": 0.7, "chose": 0.5, "bien": 0.6, "mal": 0.6,
 
             // Mots techniques / Théologiques (Coefficient fort)
             "transsubstantiation": 4, "consubstantiel": 4, "hypostase": 4, "theotokos": 4,
@@ -889,8 +889,20 @@
             if (text.length > 200 && (caps / text.length) > 0.12) return true;
 
             // 7. Structure de liste avec points-virgules fréquents (typiques des énumérations biblio)
-            const semicolons = (t.match(/;/g) || []).length;
-            if (semicolons > 5 && (text.length / semicolons) < 100) return true;
+            const semicolons = (t.match(/; /g) || []).length;
+            if (semicolons > 4 && (text.length / semicolons) < 80) return true;
+
+            // 8. Lignes commençant par des tirets/astérisques (Listes à puces)
+            const listItems = (t.match(/^[\s\t]*[-\*•]\s+/gm) || []).length;
+            if (listItems > 5 && listItems / text.split('\n').length > 0.4) return true;
+
+            // 9. Noms propres + parenthèses dates (Ex: Dupont (2020))
+            // Pattern: Majuscule... (19xx)
+            const authorDate = (text.match(/[A-Z][a-zà-ÿ]+\s+\((19|20)\d{2}\)/g) || []).length;
+            if (authorDate > 3) return true;
+
+            // 10. Présence forte de villes d'édition (Paris, Cerf, PUF...)
+            if (/Paris\s*:\s*|Editions\s*|Presses\s*Universitaires/.test(text) && dates > 2) return true;
 
             return false;
         }
@@ -1038,9 +1050,11 @@
                         const count = (wordCounts.get(stem) || 0) + 1;
                         wordCounts.set(stem, count);
 
+
                         // On utilise la racine carrée pour écraser les listes répétitives
                         // Un mot cité 100 fois ne rapportera plus que ~10 fois sa valeur au lieu de 100.
-                        chunkScore += (10 * ref.weight) / Math.sqrt(count);
+                        // MULTIPLICATEUR AUGMENTÉ de 10 à 15 pour aider les mots "banaux"
+                        chunkScore += (15 * ref.weight) / Math.sqrt(count);
 
                         // Bonus position : Uniquement si c'est la PREMIÈRE fois qu'on voit le mot en début de texte
                         if (idx < 25 && count === 1) chunkScore += 15 * ref.weight;
@@ -1101,9 +1115,31 @@
                     chunkScore -= (noiseChars * 2);
                 }
 
-                // 7. Arrondi final pour la lisibilité
+                // 7. DÉTECTION PAR SCORE ANORMAL (Bibliographies)
+                // Les bibliographies obtiennent des scores très élevés (>800-1000) à cause de la répétition
+                // C'est un signal : si le score est trop élevé, c'est probablement une liste, pas du texte authentique
+                if (chunkScore > 800) {
+                    console.log(`⚠️ Score anormalement élevé (${chunkScore}) détecté - probable bibliographie, rejeté`);
+                    return; // Rejeter ce chunk
+                }
+
+                // 8. ANALYSE DE DIVERSITÉ LEXICALE
+                // Les bibliographies répètent les mêmes mots (noms d'auteurs, titres, éditeurs)
+                // Un texte authentique a plus de variété
+                const uniqueWords = new Set(chunkWords.filter(w => w.length > 3)).size;
+                const totalWords = chunkWords.filter(w => w.length > 3).length;
+                const lexicalDiversity = totalWords > 0 ? uniqueWords / totalWords : 0;
+
+                // Si moins de 35% de mots uniques = Liste répétitive (bibliographie, notes)
+                if (lexicalDiversity < 0.35 && totalWords > 50) {
+                    console.log(`⚠️ Diversité lexicale faible (${(lexicalDiversity * 100).toFixed(1)}%) - probable liste, rejeté`);
+                    return;
+                }
+
+                // 9. Arrondi final pour la lisibilité
                 chunkScore = Math.floor(chunkScore);
-                if (chunkScore > 15) {
+                // SEUIL ABAISSÉ (était 15) pour accepter plus de résultats pertinents mais courts
+                if (chunkScore > 8) {
                     scores.push({ id: i, score: chunkScore, text: chunk });
                 }
             });
@@ -1197,6 +1233,24 @@
                 const topScores1 = scores1.slice(0, 3);
                 const topScores2 = scores2.slice(0, 2);
 
+                // STATISTIQUES POUR RAPPORT TECHNIQUE
+                const searchStats = {
+                    book1: {
+                        titre: book1.titre,
+                        totalExtraits: scores1.length,
+                        affichés: topScores1.length,
+                        topScores: scores1.slice(0, 10).map(s => s.score),
+                        scoreMax: scores1[0]?.score || 0
+                    },
+                    book2: {
+                        titre: book2.titre,
+                        totalExtraits: scores2.length,
+                        affichés: topScores2.length,
+                        topScores: scores2.slice(0, 10).map(s => s.score),
+                        scoreMax: scores2[0]?.score || 0
+                    }
+                };
+
                 const allExtraits = [
                     ...topScores1.map(s => ({ ...s, livre: book1 })),
                     ...topScores2.map(s => ({ ...s, livre: book2 }))
@@ -1279,7 +1333,7 @@
                 document.getElementById("pdf-placeholder").style.display = "none";
                 document.getElementById("pdf-ready").style.display = "block";
                 // AJOUT DU RAPPORT TECHNIQUE
-                afficherRapportTechnique();
+                afficherRapportTechnique(searchStats, forceNoIA);
 
                 // Effacer les champs de saisie
                 document.getElementById('theme-input').value = '';
@@ -1364,14 +1418,59 @@
     `;
         }
 
-        function afficherRapportTechnique() {
+        function afficherRapportTechnique(searchStats = null, isNoIA = false) {
             const modelsUsed = [...new Set(logsIA.map(log => log.model))];
+
+            let statsHTML = '';
+
+            // Si on a des stats de recherche (mode sans IA principalement)
+            if (searchStats && isNoIA) {
+                const { book1, book2 } = searchStats;
+                const totalTrouvés = book1.totalExtraits + book2.totalExtraits;
+                const totalAffichés = book1.affichés + book2.affichés;
+                const restants = totalTrouvés - totalAffichés;
+
+                // Déterminer la qualité de la recherche
+                let qualiteIcon = '✅';
+                let qualiteText = 'Excellente qualité';
+                if (totalTrouvés < 3) {
+                    qualiteIcon = '⚠️';
+                    qualiteText = 'Peu de résultats - critères trop stricts?';
+                } else if (totalTrouvés >= 3 && totalTrouvés < 10) {
+                    qualiteIcon = '👍';
+                    qualiteText = 'Bonne sélection ciblée';
+                } else if (totalTrouvés >= 20) {
+                    qualiteIcon = '🎯';
+                    qualiteText = 'Nombreux résultats disponibles';
+                }
+
+                statsHTML = `
+                    <div style="margin-bottom: 1rem; padding: 1rem; background: hsl(var(--accent) / 0.05); border-left: 3px solid hsl(var(--accent)); border-radius: 4px;">
+                        <p style="font-size: 0.85rem; color: hsl(var(--foreground)); margin-bottom: 0.5rem;">
+                            <strong>${qualiteIcon} ${qualiteText}</strong>
+                        </p>
+                        <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.7); line-height: 1.5;">
+                            📚 <strong>${book1.titre}</strong> : ${book1.totalExtraits} extrait(s) trouvé(s), ${book1.affichés} affiché(s)
+                            ${book1.topScores.length > 0 ? `<br>└─ Meilleurs scores : ${book1.topScores.slice(0, 5).join(', ')}` : ''}
+                        </p>
+                        <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.7); line-height: 1.5; margin-top: 0.3rem;">
+                            📚 <strong>${book2.titre}</strong> : ${book2.totalExtraits} extrait(s) trouvé(s), ${book2.affichés} affiché(s)
+                            ${book2.topScores.length > 0 ? `<br>└─ Meilleurs scores : ${book2.topScores.slice(0, 5).join(', ')}` : ''}
+                        </p>
+                        ${restants > 0 ? `
+                        <p style="font-size: 0.75rem; color: hsl(var(--accent)); margin-top: 0.8rem; font-style: italic;">
+                            💡 ${restants} autre(s) extrait(s) pertinent(s) disponible(s) mais non affiché(s)
+                        </p>` : ''}
+                    </div>
+                `;
+            }
 
             const rapportHTML = `
         <div style="margin-top: 3rem; padding: 1.5rem; background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); font-family: var(--font-ui);">
-            <p style="font-size: 0.7rem; color: hsl(var(--foreground) / 0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">
+            <p style="font-size: 0.7rem; color: hsl(var(--foreground) / 0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem;">
                 📊 Rapport Technique
             </p>
+            ${statsHTML}
             <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.6); line-height: 1.6;">
                 <strong>Modèles IA utilisés :</strong> ${modelsUsed.length > 0 ? modelsUsed.join(', ') : 'Aucun (extraits bruts)'}
             </p>
