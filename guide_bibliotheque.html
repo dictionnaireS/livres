@@ -544,8 +544,8 @@
                             <ul>
                                 <li>Charge l'index de tous les livres disponibles</li>
                                 <li>Calcule un score pour chaque livre selon vos critères</li>
-                                <li>Sélectionne les <span class="number-highlight">10 meilleurs livres</span></li>
-                                <li>Choisit <span class="number-highlight">2 livres au hasard</span> parmi ces 10</li>
+                                <li>Sélectionne les <span class="number-highlight">15 meilleurs livres</span></li>
+                                <li>Choisit <span class="number-highlight">3 livres au hasard</span> parmi ce top</li>
                             </ul>
                         </div>
                     </div>
@@ -591,8 +591,9 @@
                         <div class="step-content">
                             <strong>Sélection des meilleurs passages</strong>
                             <ul>
-                                <li>Les <span class="number-highlight">3 meilleurs</span> segments du 1er livre</li>
-                                <li>Les <span class="number-highlight">2 meilleurs</span> segments du 2e livre</li>
+                                <li>2 segments du 1er livre</li>
+                                <li>2 segments du 2e livre</li>
+                                <li>1 segment du 3e livre</li>
                                 <li>Total : <span class="number-highlight">5 extraits</span></li>
                             </ul>
                         </div>
@@ -605,9 +606,9 @@
 
                             <div class="warning-box">
                                 <strong>⚙️ Mode Hybride :</strong><br>
-                                • Les <strong>3 premiers extraits</strong> sont bruts (non traités par IA)<br>
-                                • Les <strong>2 derniers extraits</strong> sont raffinés par l'IA<br>
-                                • L'IA reçoit <span class="number-highlight">6 000 caractères</span> maximum<br>
+                                • Les <strong>3 premiers extraits</strong> (1-1-1) sont bruts<br>
+                                • Les <strong>2 derniers extraits</strong> (Livre 2 & 3) sont raffinés par l'IA<br>
+                                • L'IA reçoit <span class="number-highlight">8 000 caractères</span> maximum<br>
                                 • L'IA extrait un passage de <span class="number-highlight">250-600 mots</span><br>
                                 • L'IA fournit un contexte historique/théologique (40-60 mots)
                             </div>
@@ -816,25 +817,24 @@
 
                     <div class="config-item">
                         <label>Nombre de livres dans le top</label>
-                        <div class="description">Nombre de meilleurs livres sélectionnés avant tirage aléatoire</div>
+                        <div class="description">Nombre de meilleurs livres sélectionnés avant tirage aléatoire.
+                            (L'outil en choisira 3 parmi ce top)</div>
                         <div class="config-controls">
                             <div class="slider-container">
-                                <input type="range" id="topBooks" min="5" max="20" value="10"
+                                <input type="range" id="topBooks" min="5" max="30" value="15"
                                     oninput="updateValue('topBooks')">
                             </div>
-                            <div class="value-display" id="value-topBooks">10</div>
+                            <div class="value-display" id="value-topBooks">15</div>
                         </div>
                     </div>
 
                     <div class="config-item">
-                        <label>Extraits par livre</label>
-                        <div class="description">Nombre d'extraits à tirer de chaque livre (recommandé: 2 ou 3)</div>
+                        <label>Total des extraits (Info)</label>
+                        <div class="description">Configuration fixée à 5 extraits : 2 du 1er livre, 2 du 2ème livre, 1
+                            du 3ème livre.</div>
                         <div class="config-controls">
-                            <div class="slider-container">
-                                <input type="range" id="extraitsPerBook" min="1" max="5" value="3"
-                                    oninput="updateValue('extraitsPerBook')">
-                            </div>
-                            <div class="value-display" id="value-extraitsPerBook">3</div>
+                            <div class="value-display" style="width: 100%; text-align: left; padding-left: 10px;">5
+                                extraits (Pattern 2-2-1)</div>
                         </div>
                     </div>
                 </div>
@@ -1008,17 +1008,17 @@
     <script>
         // CONFIGURATION PAR DÉFAUT
         const DEFAULT_CONFIG = {
-            maxExtrait: 3000,
-            maxSegment: 6000,
+            maxExtrait: 4000,
+            maxSegment: 8000,
             typingSpeed: 10,
             charsPerTick: 10,
-            pointsTheme: 12,
-            pointsKeyword: 15,
-            bonusScripture: 20,
-            bonusTheo: 5,
-            scoreMin: 10,
-            topBooks: 10,
-            extraitsPerBook: 3,
+            pointsTheme: 15,
+            pointsKeyword: 20,
+            bonusScripture: 25,
+            bonusTheo: 8,
+            scoreMin: 12,
+            topBooks: 15,
+            extraitsPerBook: 5,
             maxScoreAllowed: 800,
             minLexicalDiversity: 0.35,
             commonWordWeight: 1.0,
@@ -1041,7 +1041,7 @@
                 bonusTheo: 3,
                 scoreMin: 10,
                 topBooks: 8,
-                extraitsPerBook: 2,
+                extraitsPerBook: 5,
                 maxScoreAllowed: 1000,
                 minLexicalDiversity: 0.3,
                 commonWordWeight: 0.8,
@@ -1061,10 +1061,10 @@
                 pointsTheme: 15,
                 pointsKeyword: 20,
                 bonusScripture: 30,
-                bonusTheo: 8,
-                scoreMin: 25,
-                topBooks: 15,
-                extraitsPerBook: 3,
+                bonusTheo: 10,
+                scoreMin: 20,
+                topBooks: 20,
+                extraitsPerBook: 5,
                 maxScoreAllowed: 700,
                 minLexicalDiversity: 0.4,
                 commonWordWeight: 1.2,
@@ -1210,8 +1210,8 @@
                 bonusScripture: 'Bonus citations',
                 bonusTheo: 'Bonus théologie',
                 scoreMin: 'Score minimal',
-                topBooks: 'Livres dans top',
-                extraitsPerBook: 'Extraits par livre',
+                topBooks: 'Livres dans top (Tirage 3)',
+                extraitsPerBook: 'Total extraits fixés',
                 maxScoreAllowed: 'Score max autorisé',
                 minLexicalDiversity: 'Diversité lexicale min',
                 commonWordWeight: 'Poids mots communs',
