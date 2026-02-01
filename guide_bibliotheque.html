@@ -539,13 +539,17 @@
                     <div class="step-container">
                         <div class="step-number">2</div>
                         <div class="step-content">
-                            <strong>Sélection intelligente des livres</strong>
+                            <strong>Sélection et Validation Itérative</strong>
                             <p>Le système :</p>
                             <ul>
-                                <li>Charge l'index de tous les livres disponibles</li>
-                                <li>Calcule un score pour chaque livre selon vos critères</li>
-                                <li>Sélectionne les <span class="number-highlight">15 meilleurs livres</span></li>
-                                <li>Choisit <span class="number-highlight">3 livres au hasard</span> parmi ce top</li>
+                                <li>Identifie les <strong>15 meilleurs candidats</strong> selon les titres et thèmes.
+                                </li>
+                                <li><strong>Analyse itérative</strong> : Il télécharge et examine les livres un par un
+                                    (jusqu'à 8 tentatives).</li>
+                                <li><strong>Filtre à vide</strong> : Si un livre ne contient aucun passage correspondant
+                                    à vos critères de score, il est automatiquement écarté.</li>
+                                <li><strong>Validation</strong> : Le processus s'arrête dès que <strong>3 livres
+                                        différents</strong> avec du contenu réel sont validés.</li>
                             </ul>
                         </div>
                     </div>
@@ -589,12 +593,16 @@
                     <div class="step-container">
                         <div class="step-number">5</div>
                         <div class="step-content">
-                            <strong>Sélection des meilleurs passages</strong>
+                            <strong>Sélection (Arbitrage Qualité/Diversité)</strong>
+                            <p>Pour garantir les meilleurs résultats possibles :</p>
                             <ul>
-                                <li>2 segments du 1er livre</li>
-                                <li>2 segments du 2e livre</li>
-                                <li>1 segment du 3e livre</li>
-                                <li>Total : <span class="number-highlight">5 extraits</span></li>
+                                <li><strong>Garantie de diversité</strong> : Le système prélève d'office le meilleur
+                                    extrait (Top 1) de chacun des 3 livres validés.</li>
+                                <li><strong>Arbitrage par le score</strong> : Les 2 extraits restants sont choisis en
+                                    prenant les meilleurs scores restants, peu importe le livre.</li>
+                                <li><strong>Impact</strong> : Si un livre est exceptionnel, il peut avoir 3 extraits
+                                    affichés. Si les trois livres sont de qualité égale, vous aurez une répartition
+                                    équilibrée.</li>
                             </ul>
                         </div>
                     </div>
