@@ -1030,10 +1030,10 @@
                 return { book, score };
             }).sort((a, b) => b.score - a.score);
 
-            const topLimit = CONFIG.topBooks || 10;
-            const topN = scoredBooks.slice(0, topLimit);
-            // Sélectionner 3 livres au hasard parmi les meilleurs
-            return topN.sort(() => Math.random() - 0.5).slice(0, 3).map(x => x.book);
+            const topLimit = CONFIG.topBooks || 15;
+            const candidates = scoredBooks.slice(0, topLimit);
+            // On mélange les candidats pour garder un aspect surprise
+            return candidates.sort(() => Math.random() - 0.5).map(x => x.book);
         }
 
         function analyzeBookChunks(book, theme, mots) {
@@ -1232,107 +1232,80 @@
                 const livres = index.livres || index;
                 console.log(`📚 ${livres.length} livres trouvés dans l'index`);
 
-                selectedBooks = selectBestBooks(livres, theme, mots);
-                console.log("📖 Livres sélectionnés:", selectedBooks.map(b => b.titre || b.fichier));
-
-                if (selectedBooks.length < 3) {
-                    throw new Error(`Seulement ${selectedBooks.length} livre(s) sélectionné(s). Essayez des mots-clés plus généraux.`);
-                }
-
-                // Charger et analyser les trois livres
                 const statusStep = document.getElementById("search-status-step");
-                if (statusStep) statusStep.innerText = "📖 Chargement du premier livre...";
-                const book1 = await loadBookJSON(selectedBooks[0].fichier);
-                console.log(`✅ Livre 1 chargé: ${book1.chunks.length} segments`);
+                const candidateBooks = selectBestBooks(livres, theme, mots);
+                console.log(`📖 Liste des candidats (${candidateBooks.length} livres)`);
 
-                if (statusStep) statusStep.innerText = "📖 Analyse du premier livre...";
-                const scores1 = analyzeBookChunks(book1, theme, mots);
-                console.log(`📊 Livre 1: ${scores1.length} extraits pertinents trouvés`);
+                let validBooksFound = []; // Liste de { bookData, scores }
+                let attempts = 0;
+                const maxAttempts = 8; // On n'essaie pas plus de 8 livres pour ne pas être trop long
 
-                if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Lecture' : 'Analyse'} du second livre...`;
-                const book2 = await loadBookJSON(selectedBooks[1].fichier);
-                console.log(`✅ Livre 2 chargé: ${book2.chunks.length} segments`);
+                for (let bookMeta of candidateBooks) {
+                    if (validBooksFound.length >= 3 || attempts >= maxAttempts) break;
+                    attempts++;
 
-                if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Extraction' : 'Analyse'} du deuxième livre...`;
-                const scores2 = analyzeBookChunks(book2, theme, mots);
-                console.log(`📊 Livre 2: ${scores2.length} extraits pertinents trouvés`);
+                    if (statusStep) statusStep.innerText = `📖 Tentative livre ${attempts} : ${bookMeta.titre}...`;
 
-                if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Lecture' : 'Analyse'} du troisième livre...`;
-                const book3 = await loadBookJSON(selectedBooks[2].fichier);
-                console.log(`✅ Livre 3 chargé: ${book3.chunks.length} segments`);
+                    try {
+                        const fullBook = await loadBookJSON(bookMeta.fichier);
+                        const bookScores = analyzeBookChunks(fullBook, theme, mots);
 
-                if (statusStep) statusStep.innerText = `📖 ${forceNoIA ? 'Extraction finale' : 'Analyse finale'} des passages...`;
-                const scores3 = analyzeBookChunks(book3, theme, mots);
-                console.log(`📊 Livre 3: ${scores3.length} extraits pertinents trouvés`);
-
-                if (scores1.length === 0 && scores2.length === 0 && scores3.length === 0) {
-                    throw new Error("Aucun extrait pertinent trouvé dans ces ouvrages. Essayez d'autres mots-clés.");
+                        if (bookScores.length > 0) {
+                            console.log(`✅ Livre validé : ${fullBook.titre} (${bookScores.length} extraits)`);
+                            validBooksFound.push({ book: fullBook, scores: bookScores });
+                        } else {
+                            console.log(`⚠️ Livre écarté (aucun extrait pertinent) : ${fullBook.titre}`);
+                        }
+                    } catch (err) {
+                        console.error(`❌ Erreur chargement livre ${bookMeta.fichier}:`, err);
+                    }
                 }
 
-                // Préparer les extraits (Répartition Dynamique sur 3 livres)
-                document.getElementById("results-content").innerHTML = "";
+                if (validBooksFound.length === 0) {
+                    throw new Error("Aucun extrait pertinent n'a pu être trouvé dans les ouvrages sélectionnés. Modifiez vos critères.");
+                }
 
-                // Répartition intelligente : 2-2-1 (ou dynamique si un livre manque de contenu)
-                const targetTotal = 5;
+                // PRÉPARER LA CORBEILLE GLOBALE DES EXTRAITS
+                // Stratégie :
+                // 1. On prend d'office le TOP 1 de chaque livre trouvé (max 3)
+                // 2. On complète avec les meilleurs scores mondiaux restants jusqu'à 5
 
                 let allExtraits = [];
-                let i1 = 0, i2 = 0, i3 = 0;
+                let globalPool = []; // Contient tous les extraits restants avec leur livre associé
 
-                // Pattern : Livre1, Livre2, Livre1, Livre2, Livre3
-                // On prend alternativement pour garantir la diversité
-                const pattern = [1, 2, 1, 2, 3]; // Ordre de prélèvement
+                // Étape 1 : Le meilleur de chaque livre
+                validBooksFound.forEach(item => {
+                    const top1 = item.scores[0];
+                    allExtraits.push({ ...top1, livre: item.book });
+                    // On met le reste dans le pool global
+                    item.scores.slice(1).forEach(s => {
+                        globalPool.push({ ...s, livre: item.book });
+                    });
+                });
 
-                for (let p of pattern) {
-                    if (allExtraits.length >= targetTotal) break;
-
-                    if (p === 1 && i1 < scores1.length) {
-                        allExtraits.push({ ...scores1[i1], livre: book1 });
-                        i1++;
-                    } else if (p === 2 && i2 < scores2.length) {
-                        allExtraits.push({ ...scores2[i2], livre: book2 });
-                        i2++;
-                    } else if (p === 3 && i3 < scores3.length) {
-                        allExtraits.push({ ...scores3[i3], livre: book3 });
-                        i3++;
-                    } else {
-                        // Si le livre prévu est vide, on complète avec les autres
-                        if (i1 < scores1.length) {
-                            allExtraits.push({ ...scores1[i1], livre: book1 });
-                            i1++;
-                        } else if (i2 < scores2.length) {
-                            allExtraits.push({ ...scores2[i2], livre: book2 });
-                            i2++;
-                        } else if (i3 < scores3.length) {
-                            allExtraits.push({ ...scores3[i3], livre: book3 });
-                            i3++;
-                        }
-                    }
+                // Étape 2 : Compléter jusqu'à 5 avec les meilleurs du pool
+                globalPool.sort((a, b) => b.score - a.score);
+                const needed = 5 - allExtraits.length;
+                if (needed > 0) {
+                    allExtraits.push(...globalPool.slice(0, needed));
                 }
 
-                // STATISTIQUES POUR RAPPORT TECHNIQUE (basées sur ce qui a été réellement trouvé)
-                const searchStats = {
-                    book1: {
-                        titre: book1.titre,
-                        totalExtraits: scores1.length,
-                        affichés: i1,
-                        topScores: scores1.slice(0, 10).map(s => s.score),
-                        scoreMax: scores1[0]?.score || 0
-                    },
-                    book2: {
-                        titre: book2.titre,
-                        totalExtraits: scores2.length,
-                        affichés: i2,
-                        topScores: scores2.slice(0, 10).map(s => s.score),
-                        scoreMax: scores2[0]?.score || 0
-                    },
-                    book3: {
-                        titre: book3.titre,
-                        totalExtraits: scores3.length,
-                        affichés: i3,
-                        topScores: scores3.slice(0, 10).map(s => s.score),
-                        scoreMax: scores3[0]?.score || 0
-                    }
-                };
+                // Nettoyer l'ordre final par score (optionnel, ou garder l'ordre actuel)
+                allExtraits.sort((a, b) => b.score - a.score);
+
+                // STATISTIQUES POUR RAPPORT TECHNIQUE
+                // On crée dynamiquement les stats pour chaque livre trouvé
+                const searchStats = {};
+                validBooksFound.forEach((item, idx) => {
+                    const countDisplayed = allExtraits.filter(e => e.livre.titre === item.book.titre).length;
+                    searchStats[`book${idx + 1}`] = {
+                        titre: item.book.titre,
+                        totalExtraits: item.scores.length,
+                        affichés: countDisplayed,
+                        topScores: item.scores.slice(0, 5).map(s => s.score),
+                        scoreMax: item.scores[0]?.score || 0
+                    };
+                });
 
                 // Traiter chaque extrait avec l'IA
                 for (let i = 0; i < allExtraits.length; i++) {
@@ -1504,9 +1477,22 @@
 
             // Si on a des stats de recherche (mode sans IA principalement)
             if (searchStats && isNoIA) {
-                const { book1, book2, book3 } = searchStats;
-                const totalTrouvés = book1.totalExtraits + book2.totalExtraits + book3.totalExtraits;
-                const totalAffichés = book1.affichés + book2.affichés + book3.affichés;
+                let totalTrouvés = 0;
+                let totalAffichés = 0;
+                let booksHTML = '';
+
+                Object.keys(searchStats).forEach(key => {
+                    const st = searchStats[key];
+                    totalTrouvés += st.totalExtraits;
+                    totalAffichés += st.affichés;
+                    booksHTML += `
+                        <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.7); line-height: 1.5; margin-top: 0.3rem;">
+                            📚 <strong>${st.titre}</strong> : ${st.totalExtraits} extrait(s) trouvé(s), ${st.affichés} affiché(s)
+                            ${st.topScores.length > 0 ? `<br>└─ Meilleurs scores : ${st.topScores.slice(0, 5).join(', ')}` : ''}
+                        </p>
+                    `;
+                });
+
                 const restants = totalTrouvés - totalAffichés;
 
                 // Déterminer la qualité de la recherche
@@ -1528,18 +1514,7 @@
                         <p style="font-size: 0.85rem; color: hsl(var(--foreground)); margin-bottom: 0.5rem;">
                             <strong>${qualiteIcon} ${qualiteText}</strong>
                         </p>
-                        <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.7); line-height: 1.5;">
-                            📚 <strong>${book1.titre}</strong> : ${book1.totalExtraits} extrait(s) trouvé(s), ${book1.affichés} affiché(s)
-                            ${book1.topScores.length > 0 ? `<br>└─ Meilleurs scores : ${book1.topScores.slice(0, 5).join(', ')}` : ''}
-                        </p>
-                        <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.7); line-height: 1.5; margin-top: 0.3rem;">
-                            📚 <strong>${book2.titre}</strong> : ${book2.totalExtraits} extrait(s) trouvé(s), ${book2.affichés} affiché(s)
-                            ${book2.topScores.length > 0 ? `<br>└─ Meilleurs scores : ${book2.topScores.slice(0, 5).join(', ')}` : ''}
-                        </p>
-                        <p style="font-size: 0.75rem; color: hsl(var(--foreground) / 0.7); line-height: 1.5; margin-top: 0.3rem;">
-                            📚 <strong>${book3.titre}</strong> : ${book3.totalExtraits} extrait(s) trouvé(s), ${book3.affichés} affiché(s)
-                            ${book3.topScores.length > 0 ? `<br>└─ Meilleurs scores : ${book3.topScores.slice(0, 5).join(', ')}` : ''}
-                        </p>
+                        ${booksHTML}
                         ${restants > 0 ? `
                         <p style="font-size: 0.75rem; color: hsl(var(--accent)); margin-top: 0.8rem; font-style: italic;">
                             💡 ${restants} autre(s) extrait(s) pertinent(s) disponible(s) mais non affiché(s)
