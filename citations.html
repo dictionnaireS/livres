@@ -629,6 +629,7 @@
 
                     // Extraction locale classique
                     candidates = extractCitations(fileContent, keyword, useAI ? numCitations * 8 : numCitations);
+                    candidates.forEach(c => c.source = selectedFile.name);
                 }
 
                 // --- MODE BIBLIOTHÈQUE EN LIGNE (GITHUB) ---
@@ -682,6 +683,7 @@
 
                         // On accumule les candidats de ce livre
                         const bookCandidates = extractCitations(bookText, keyword, numCitations * 3);
+                        bookCandidates.forEach(c => c.source = book.titre);
                         candidates = candidates.concat(bookCandidates);
                     }
                 }
@@ -717,20 +719,12 @@
             }
         });
 
-        // Nouvelle fonction pour gérer l'IA directement depuis une liste de candidats déjà extraits
         async function extractCitationsWithAIFromCandidates(candidates, keyword, numCitations) {
             showMessage('🤖 Mode IA activé - Analyse transversale...', 'loading');
 
             // On garde les 40 meilleurs candidats pour ne pas saturer le prompt
             const topCandidates = candidates.slice(0, 40);
-            const candidateTexts = topCandidates.map(c => c.phrase).join('\n---\n');
-
-            // ... (La suite utilise la logique d'appel IA existante, on réutilise le prompt)
-            // Pour éviter de dupliquer le code du prompt, l'idéal serait de refactoriser,
-            // mais pour l'instant je vais appeler une version modifiée de extractCitationsWithAI
-            // qui accepte le texte préparé.
-
-            return await runAIAnalysis(candidateTexts, keyword, numCitations);
+            return await runAIAnalysis(topCandidates, keyword, numCitations);
         }
 
         // Logique de sélection des livres
@@ -1628,7 +1622,12 @@
         }
 
         // Ancienne fonction adaptée pour accepter directement le texte préparé
-        async function runAIAnalysis(candidateTexts, keyword = '', numCitations = 5) {
+        async function runAIAnalysis(candidates, keyword = '', numCitations = 5) {
+
+            // Si c'est une chaîne brute (ancien format), on l'utilise, sinon on prépare le texte
+            const candidateTexts = Array.isArray(candidates)
+                ? candidates.map(c => c.phrase).join('\n---\n')
+                : candidates;
 
             const prompt = `Tu es un expert en spiritualité chrétienne et musulmane, spécialisé dans l'identification des paradoxes mystiques.
 
@@ -1703,13 +1702,23 @@ Réponds maintenant avec les citations uniquement :`;
 
                         if (aiCitations.length > 0) {
                             showMessage(`✅ ${aiCitations.length} citation(s) sélectionnée(s) par l'IA`, 'info');
-                            return aiCitations.map((phrase, index) => ({
-                                phrase: phrase,
-                                score: 100 - index,
-                                position: 0,
-                                aiGenerated: true,
-                                modelUsed: model.split('/')[1]
-                            }));
+                            return aiCitations.map((phrase, index) => {
+                                // On cherche la source dans les candidats originaux
+                                let source = "Inconnu";
+                                if (Array.isArray(candidates)) {
+                                    const match = candidates.find(c => phrase.includes(c.phrase.substring(0, 30)));
+                                    if (match) source = match.source;
+                                }
+
+                                return {
+                                    phrase: phrase,
+                                    score: 100 - index,
+                                    position: 0,
+                                    source: source,
+                                    aiGenerated: true,
+                                    modelUsed: model.split('/')[1]
+                                };
+                            });
                         }
                     }
 
@@ -1882,6 +1891,7 @@ Réponds maintenant avec les citations uniquement :`;
                 citationDiv.innerHTML = `
                     <div class="citation-text">"${item.phrase}"</div>
                     <div class="citation-context">
+                        ${item.source ? `<strong>${item.source}</strong> | ` : ''}
                         Citation ${index + 1}/${citations.length} ${aiBadge}
                         ${!item.aiGenerated ? `| Score: ${item.score} points` : ''}
                         ${pageIndex.length > 0 && pageNumber !== '?' ? ` | Page ${pageNumber}` : ''}
