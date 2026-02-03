@@ -613,6 +613,7 @@
                     if (!selectedFile) return;
                     showMessage('Lecture du fichier local...', 'loading');
 
+                    let localSource = selectedFile.name;
                     if (selectedFile.name.toLowerCase().endsWith('.pdf')) {
                         fileContent = await extractTextFromPDF(selectedFile);
                     } else if (selectedFile.name.toLowerCase().endsWith('.txt')) {
@@ -620,7 +621,11 @@
                     } else if (selectedFile.name.toLowerCase().endsWith('.epub')) {
                         fileContent = await extractTextFromEPUB(selectedFile);
                     } else if (selectedFile.name.toLowerCase().endsWith('.json')) {
-                        fileContent = await extractTextFromJSON(selectedFile);
+                        const jsonData = await extractTextFromJSON(selectedFile);
+                        fileContent = jsonData.text;
+                        if (jsonData.title) {
+                            localSource = jsonData.author ? `${jsonData.title} (${jsonData.author})` : jsonData.title;
+                        }
                     }
 
                     if (!fileContent || fileContent.trim().length === 0) {
@@ -629,7 +634,7 @@
 
                     // Extraction locale classique
                     candidates = extractCitations(fileContent, keyword, useAI ? numCitations * 8 : numCitations);
-                    candidates.forEach(c => c.source = selectedFile.name);
+                    candidates.forEach(c => c.source = localSource);
                 }
 
                 // --- MODE BIBLIOTHÈQUE EN LIGNE (GITHUB) ---
@@ -683,7 +688,7 @@
 
                         // On accumule les candidats de ce livre
                         const bookCandidates = extractCitations(bookText, keyword, numCitations * 3);
-                        bookCandidates.forEach(c => c.source = book.titre);
+                        bookCandidates.forEach(c => c.source = `${book.titre} (${book.auteur})`);
                         candidates = candidates.concat(bookCandidates);
                     }
                 }
@@ -837,11 +842,16 @@
         async function extractTextFromJSON(file) {
             const text = await file.text();
             const data = JSON.parse(text);
-            if (data.texte_integral) return data.texte_integral;
-            if (data.contenu) {
-                return Array.isArray(data.contenu) ? data.contenu.join(' ') : data.contenu;
+            let content = "";
+            if (data.texte_integral) content = data.texte_integral;
+            else if (data.contenu) {
+                content = Array.isArray(data.contenu) ? data.contenu.join(' ') : data.contenu;
             }
-            return "";
+            return {
+                text: content,
+                title: data.titre || data.title,
+                author: data.auteur || data.author
+            };
         }
 
         function extractCitations(text, keyword = '', numCitations = 5) {
@@ -1631,6 +1641,9 @@
 
             const prompt = `Tu es un expert en spiritualité chrétienne et musulmane, spécialisé dans l'identification des paradoxes mystiques.
 
+OBLIGATION ABSOLUE : 
+Tu ne dois RIEN inventer. Tu dois RECOPIER MOT POUR MOT les phrases du texte fourni, sans changer une seule virgule, sans corriger la grammaire, sans ajouter de guillemets. Toute modification du texte original est une faute grave.
+
 DÉFINITION D'UN PARADOXE SPIRITUEL :
 Un paradoxe spirituel présente une vérité qui défie la logique ordinaire, où deux réalités apparemment contradictoires coexistent ou se révèlent mutuellement. Ce n'est pas une simple juxtaposition d'antonymes, mais une tension dialectique où l'un révèle l'autre.
 
@@ -1658,21 +1671,20 @@ CE QUE TU DOIS ABSOLUMENT REJETER (LE "BANAL") :
 
 3. Les phrases trop longues, molles ou diluées.
 
-PASSAGES À ANALYSER :
+PASSAGES À ANALYSER (RECOPIE EN UN PARMI CEUX-LÀ) :
 ${candidateTexts}
 
-TÂCHE : Sélectionne exactement ${numCitations} citations qui :
-1. Sont des APHORISMES percutants (courts et denses si possible).
-2. Contiennent un VRAI paradoxe mystique (tension interne forte).
-3. Sont compréhensibles sans contexte.
+TÂCHE : Sélectionne exactement ${numCitations} citations de la liste ci-dessus qui :
+1. Sont des APHORISMES percutants.
+2. Contiennent un VRAI paradoxe mystique.
+3. Sont RECOPIÉES RIGOUREUSEMENT MOT POUR MOT.
 ${keyword ? `4. Privilégie (sans obligation) les citations contenant "${keyword}" si elles sont paradoxales.\n` : ''}
-
-Si tu ne trouves pas assez de "pépites", prends les meilleures disponibles, mais sois très sélectif.
 
 FORMAT DE RÉPONSE :
 - Une citation par ligne
+- AUCUN TEXTE AVANT OU APRÈS (Pas de "Voici les citations", pas de "D'accord")
 - Aucune numérotation, aucun commentaire, aucune explication
-- Phrases exactes extraites du texte
+- Phrases EXACTES du texte
 
 Réponds maintenant avec les citations uniquement :`;
 
@@ -1693,20 +1705,33 @@ Réponds maintenant avec les citations uniquement :`;
                     const response = await callOpenRouterAPI(prompt, model);
 
                     if (response && response.trim().length > 0) {
-                        // Parser la réponse
-                        const aiCitations = response
+                        // Nettoyage des phrases d'introduction type "Voici les citations..."
+                        const garbage = ["voici", "d'accord", "bien sûr", "sélection", "extrait", "citation"];
+                        const filteredCitations = response
                             .split('\n')
-                            .map(line => line.trim())
-                            .filter(line => line.length > 30)
+                            .map(line => line.trim().replace(/^["']|["']$/g, '')) // Enlève aussi les guillemets superflus
+                            .filter(line => {
+                                if (line.length < 15) return false;
+                                const lower = line.toLowerCase();
+                                return !garbage.some(g => lower.startsWith(g) && lower.endsWith(':'));
+                            })
                             .slice(0, numCitations);
 
-                        if (aiCitations.length > 0) {
-                            showMessage(`✅ ${aiCitations.length} citation(s) sélectionnée(s) par l'IA`, 'info');
-                            return aiCitations.map((phrase, index) => {
-                                // On cherche la source dans les candidats originaux
+                        if (filteredCitations.length > 0) {
+                            showMessage(`✅ ${filteredCitations.length} citation(s) sélectionnée(s) par l'IA`, 'info');
+                            return filteredCitations.map((phrase, index) => {
                                 let source = "Inconnu";
                                 if (Array.isArray(candidates)) {
-                                    const match = candidates.find(c => phrase.includes(c.phrase.substring(0, 30)));
+                                    const clean = s => s.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, '');
+                                    const cleanPhrase = clean(phrase);
+
+                                    // On cherche une correspondance sur les 60 premiers caractères
+                                    const match = candidates.find(c => {
+                                        const cleanC = clean(c.phrase);
+                                        const part = 60;
+                                        return cleanC.includes(cleanPhrase.substring(0, part)) ||
+                                            cleanPhrase.includes(cleanC.substring(0, part));
+                                    });
                                     if (match) source = match.source;
                                 }
 
