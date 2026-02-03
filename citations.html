@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracteur de Citations Spirituelles (avec IA)</title>
+    <style>
+        :root {
+            --primary: #764ba2;
+            --secondary: #667eea;
+            --accent: #ff9a9e;
+            --bg-glass: rgba(255, 255, 255, 0.9);
+            --text-main: #2d3436;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-glass);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 3em;
+            font-weight: 800;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .upload-section {
+            background: rgba(102, 126, 234, 0.05);
+            border: 3px dashed var(--secondary);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .upload-section:hover {
+            border-color: var(--primary);
+            background: rgba(118, 75, 162, 0.1);
+            transform: translateY(-5px);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 45px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+            transition: all 0.3s;
+        }
+
+        .file-label:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(118, 75, 162, 0.4);
+        }
+
+        .file-name {
+            margin-top: 15px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .options-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .option-group {
+            margin-bottom: 0;
+        }
+
+        .option-group.full-width {
+            grid-column: span 2;
+        }
+
+        .option-group label {
+            display: block;
+            margin-bottom: 12px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 15px 25px;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            width: 100%;
+            font-size: 1em;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #f0f4f8;
+            padding: 15px 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .checkbox-container:hover {
+            background: #e2e8f0;
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 60px;
+            border-radius: 50px;
+            font-size: 1.25em;
+            font-weight: 700;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            box-shadow: 0 10px 25px rgba(118, 75, 162, 0.3);
+            transition: all 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(118, 75, 162, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .citations-container {
+            margin-top: 40px;
+        }
+
+        .citation {
+            background: white;
+            border-left: 8px solid var(--primary);
+            padding: 35px;
+            margin-bottom: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .citation:hover {
+            transform: scale(1.02);
+        }
+
+        .citation::before {
+            content: '“';
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            font-size: 5em;
+            color: rgba(118, 75, 162, 0.05);
+            font-family: serif;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .citation-text {
+            font-size: 1.3em;
+            line-height: 1.7;
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+
+        .citation-context {
+            font-size: 0.9em;
+            color: #888;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        .error {
+            background: #fff5f5;
+            color: #d63031;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #fab1a0;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .info {
+            background: #edf2ff;
+            color: #4c6ef5;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .search-mode-selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            flex: 1;
+            max-width: 250px;
+            cursor: pointer;
+        }
+
+        .mode-btn input[type="radio"] {
+            display: none;
+        }
+
+        .mode-content {
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid #eee;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .mode-btn input[type="radio"]:checked+.mode-content {
+            border-color: var(--primary);
+            background: rgba(118, 75, 162, 0.05);
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(118, 75, 162, 0.1);
+        }
+
+        .mode-icon {
+            font-size: 1.8em;
+        }
+
+        .mode-text {
+            font-weight: 700;
+            color: #555;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mode-btn input[type="radio"]:checked+.mode-content .mode-text {
+            color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            .search-mode-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .mode-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📖 Extracteur de Citations Spirituelles</h1>
+
+        <div class="search-mode-selector">
+            <label class="mode-btn">
+                <input type="radio" name="searchMode" id="modeLocal" checked>
+                <div class="mode-content">
+                    <span class="mode-icon">💾</span>
+                    <span class="mode-text">Fichier Local</span>
+                </div>
+            </label>
+            <label class="mode-btn">
+                <input type="radio" name="searchMode" id="modeOnline">
+                <div class="mode-content">
+                    <span class="mode-icon">🌐</span>
+                    <span class="mode-text">Bibliothèque Online</span>
+                </div>
+            </label>
+        </div>
+
+        <div id="localSection">
+            <div class="upload-section">
+                <label for="fileInput" class="file-label">
+                    Sélectionner un fichier (PDF, TXT ou JSON)
+                </label>
+                <input type="file" id="fileInput" accept=".pdf,.txt,.epub,.json">
+                <div class="file-name" id="fileName">Aucun fichier sélectionné</div>
+            </div>
+        </div>
+
+        <div id="onlineSection" style="display: none;">
+            <div class="info">
+                La recherche s'effectuera parmi les centaines de livres de la bibliothèque GitHub.
+                <br><small>(Basé sur votre index_master.json)</small>
+            </div>
+        </div>
+
+        <div class="options-section">
+            <div class="option-group full-width">
+                <label for="keywordInput">Thème ou mot-clé pour chercher un paradoxe (optionnel) :</label>
+                <input type="text" id="keywordInput" placeholder="Ex: lumière, foi, silence, mort...">
+            </div>
+
+            <div class="option-group">
+                <label for="numCitations">Quantité de citations :</label>
+                <input type="number" id="numCitations" value="5" min="1" max="20">
+            </div>
+
+            <div class="option-group">
+                <label>&nbsp;</label>
+                <label for="useAI" class="checkbox-container">
+                    <input type="checkbox" id="useAI" checked>
+                    <span>Utiliser l'IA <span class="ai-badge">Premium</span></span>
+                </label>
+            </div>
+        </div>
+
+        <button id="extractBtn" disabled>Extraire Citations</button>
+
+        <div id="messageContainer"></div>
+        <div id="citationsContainer" class="citations-container"></div>
+    </div>
+
+    <!-- PDF.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        // Configuration PDF.js
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        }
+
+        // Configuration du proxy HuggingFace
+        const PROXY_URL = "https://gildasr-dictionnaires.hf.space/api/chat";
+
+        // Modèles OpenRouter : Sélection des modèles gratuits les plus puissants (Llama 70B/405B, etc.)
+        const OPENROUTER_MODELS = [
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "meta-llama/llama-3.1-405b-instruct:free",
+            "mistralai/mistral-small-3.1-24b-instruct:free",
+            "google/gemini-2.0-pro-exp-02-05:free",
+            "openai/gpt-oss-120b:free",
+            "tngtech/deepseek-r1t-chimera:free",
+            "anthropic/claude-3-haiku"
+        ];
+
+        const DELAY_BETWEEN_MODELS = 3000;  // 3 secondes
+        const DELAY_AFTER_ERROR = 5000;     // 5 secondes
+        const API_TIMEOUT = 60000;          // 60 secondes
+        const MAX_ATTEMPTS_PER_BOOK = 12;
+
+        // Vocabulaire religieux pour détection
+        const vocabulaireReligieux = [
+            // Noms divins et figures sacrées
+            'dieu', 'seigneur', 'christ', 'jésus', 'esprit', 'saint', 'trinité',
+            'allah', 'prophète', 'muhammad', 'mahomet', 'marie', 'vierge',
+
+            // Concepts théologiques fondamentaux
+            'divin', 'sacré', 'éternel', 'transcendance', 'immanence', 'providence',
+            'grâce', 'miséricorde', 'rédemption', 'salut', 'incarnation', 'résurrection',
+
+            // Dimension intérieure et mystique
+            'âme', 'esprit', 'cœur', 'conscience', 'intériorité', 'mystique',
+            'contempl', 'méditation', 'oraison', 'recueillement', 'silence',
+            'illumination', 'révélation', 'extase', 'union', 'théosis', 'déification',
+
+            // Vertus et états spirituels
+            'foi', 'espérance', 'charité', 'amour', 'humilité', 'obéissance',
+            'pauvreté', 'détachement', 'abandon', 'confiance', 'patience',
+            'sagesse', 'discernement', 'pureté', 'simplicité',
+
+            // Pratiques et voies
+            'prière', 'jeûne', 'ascèse', 'pénitence', 'pardon', 'confession',
+            'communion', 'eucharistie', 'sacrement', 'baptême',
+            'ramadan', 'hajj', 'pèlerinage', 'dhikr', 'soufisme',
+
+            // Chute et rédemption
+            'péché', 'chute', 'tentation', 'épreuve', 'purification', 'conversion',
+            'repentir', 'pénitent', 'rachat', 'expiation',
+
+            // Réalités eschatologiques
+            'paradis', 'ciel', 'enfer', 'purgatoire', 'jugement', 'éternité',
+            'royaume', 'vie éternelle', 'résurrection', 'gloire',
+
+            // Textes et traditions
+            'évangile', 'écriture', 'parole', 'testament', 'bible',
+            'coran', 'sourate', 'verset', 'hadith', 'sunna', 'tradition',
+
+            // Lieux et communautés
+            'église', 'temple', 'cathédrale', 'monastère', 'ermitage',
+            'mosquée', 'mecque', 'médine', 'jérusalem',
+            'communauté', 'fidèle', 'croyant', 'disciple', 'frère', 'sœur',
+
+            // Symboles et rituels
+            'croix', 'crucifixion', 'passion', 'sang', 'pain', 'vin',
+            'lumière', 'ténèbres', 'eau', 'feu', 'souffle', 'voile',
+            'rosaire', 'chapelet', 'icône', 'relique',
+
+            // Paradoxes mystiques classiques
+            'mort', 'vie', 'vide', 'plein', 'nuit', 'jour',
+            'anéantissement', 'être', 'néant', 'tout', 'rien',
+            'pauvre', 'riche', 'petit', 'grand', 'dernier', 'premier',
+            'serviteur', 'maître', 'esclave', 'libre',
+
+            // Voie mystique
+            'nuit obscure', 'désert', 'aridité', 'consolation', 'désolation',
+            'quiétude', 'passivité', 'activité', 'effort', 'don',
+            'volonté', 'abandon', 'renoncement', 'possession',
+
+            // Termes soufis et mystiques musulmans
+            'fana', 'baqa', 'tawhid', 'nafs', 'qalb', 'ruh',
+            'maqam', 'hal', 'tariqa', 'soufi', 'derviche',
+
+            // Termes mystiques chrétiens
+            'théologie négative', 'apophatique', 'nuée', 'ténèbre divine',
+            'hésychasme', 'quiétisme', 'abandon', 'petite voie',
+
+            // Expérience spirituelle
+            'consolation', 'sécheresse', 'aridité', 'ferveur',
+            'vision', 'locution', 'stigmate', 'miracle', 'grâce',
+            'onction', 'présence', 'absence', 'proximité', 'distance'
+        ];
+
+        let fileContent = '';
+        let selectedFile = null;
+        let pageIndex = [];
+        let currentModelIndex = 0;
+
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const extractBtn = document.getElementById('extractBtn');
+        const citationsContainer = document.getElementById('citationsContainer');
+        const messageContainer = document.getElementById('messageContainer');
+        const keywordInput = document.getElementById('keywordInput');
+        const numCitationsInput = document.getElementById('numCitations');
+        const useAICheckbox = document.getElementById('useAI');
+        const modeLocal = document.getElementById('modeLocal');
+        const modeOnline = document.getElementById('modeOnline');
+        const localSection = document.getElementById('localSection');
+        const onlineSection = document.getElementById('onlineSection');
+
+        // Gestion du changement de mode
+        function updateMode() {
+            if (modeLocal.checked) {
+                localSection.style.display = 'block';
+                onlineSection.style.display = 'none';
+                extractBtn.disabled = !selectedFile;
+            } else {
+                localSection.style.display = 'none';
+                onlineSection.style.display = 'block';
+                extractBtn.disabled = false; // Toujours actif en mode en ligne (on vérifie le mot-clé au clic)
+            }
+        }
+
+        modeLocal.addEventListener('change', updateMode);
+        modeOnline.addEventListener('change', updateMode);
+
+        fileInput.addEventListener('change', async (e) => {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                fileName.textContent = selectedFile.name;
+                extractBtn.disabled = false;
+                citationsContainer.innerHTML = '';
+                messageContainer.innerHTML = '';
+            }
+        });
+
+        // URL de base du repo GitHub
+        // Structure attendue : 
+        // - racine/index_master.json (le catalogue)
+        // - racine/LIVRES/nom_du_livre.json (les livres)
+        const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/dictionnaireS/livres/main';
+
+        // Nom du fichier d'index global (catalogue)
+        const CATALOG_FILENAME = 'index_master.json';
+
+        extractBtn.addEventListener('click', async () => {
+            citationsContainer.innerHTML = '';
+            messageContainer.innerHTML = '';
+            extractBtn.disabled = true;
+
+            const keyword = keywordInput.value.trim();
+            const numCitations = parseInt(numCitationsInput.value) || 5;
+            const useAI = useAICheckbox.checked;
+
+            try {
+                let candidates = [];
+
+                // --- MODE FICHIER LOCAL ---
+                if (modeLocal.checked) {
+                    if (!selectedFile) return;
+                    showMessage('Lecture du fichier local...', 'loading');
+
+                    if (selectedFile.name.toLowerCase().endsWith('.pdf')) {
+                        fileContent = await extractTextFromPDF(selectedFile);
+                    } else if (selectedFile.name.toLowerCase().endsWith('.txt')) {
+                        fileContent = await extractTextFromTXT(selectedFile);
+                    } else if (selectedFile.name.toLowerCase().endsWith('.epub')) {
+                        fileContent = await extractTextFromEPUB(selectedFile);
+                    } else if (selectedFile.name.toLowerCase().endsWith('.json')) {
+                        fileContent = await extractTextFromJSON(selectedFile);
+                    }
+
+                    if (!fileContent || fileContent.trim().length === 0) {
+                        throw new Error("Le fichier semble vide.");
+                    }
+
+                    // Extraction locale classique
+                    candidates = extractCitations(fileContent, keyword, useAI ? numCitations * 8 : numCitations);
+                }
+
+                // --- MODE BIBLIOTHÈQUE EN LIGNE (GITHUB) ---
+                else {
+                    if (!keyword) {
+                        throw new Error("En mode Bibliothèque, un thème ou mot-clé est obligatoire pour sélectionner les livres.");
+                    }
+                    showMessage('🔍 Recherche dans la Bibliothèque Spirituelle...', 'loading');
+
+                    // 1. Charger l'index global
+                    const indexResponse = await fetch(`${GITHUB_BASE_URL}/${CATALOG_FILENAME}`);
+                    if (!indexResponse.ok) {
+                        if (indexResponse.status === 404) {
+                            throw new Error(`Le fichier catalogue "${CATALOG_FILENAME}" est introuvable sur GitHub.`);
+                        }
+                        throw new Error("Impossible de charger l'index de la bibliothèque (Erreur " + indexResponse.status + ")");
+                    }
+                    const libraryIndex = await indexResponse.json();
+
+                    // 2. Trouver les meilleurs livres pour ce mot-clé
+                    const topBooks = findBestBooks(libraryIndex, keyword, 10); // Top 10
+
+                    if (topBooks.length === 0) {
+                        throw new Error(`Aucun livre ne semble correspondre au thème "${keyword}".`);
+                    }
+
+                    // 3. Sélectionner 3 livres au hasard parmi ce Top 10
+                    const selectedBooks = selectRandomBooks(topBooks, 3);
+                    showMessage(`📚 Livres sélectionnés : ${selectedBooks.map(b => b.titre).join(', ')}`, 'info');
+
+                    // 4. Télécharger et scanner ces 3 livres
+                    for (const book of selectedBooks) {
+                        showMessage(`Téléchargement de "${book.titre}"...`, 'loading');
+                        const bookResponse = await fetch(`${GITHUB_BASE_URL}/${book.fichier_source}`);
+                        if (!bookResponse.ok) continue;
+
+                        const bookData = await bookResponse.json();
+
+                        // Adaptation au format : "texte_integral" ou "contenu"
+                        let bookText = "";
+                        if (bookData.texte_integral) {
+                            bookText = bookData.texte_integral;
+                        } else if (bookData.contenu) {
+                            bookText = Array.isArray(bookData.contenu) ? bookData.contenu.join(' ') : bookData.contenu;
+                        }
+
+                        if (!bookText) {
+                            console.warn(`Pas de texte trouvé pour le livre: ${book.titre}`);
+                            continue;
+                        }
+
+                        // On accumule les candidats de ce livre
+                        const bookCandidates = extractCitations(bookText, keyword, numCitations * 3);
+                        candidates = candidates.concat(bookCandidates);
+                    }
+                }
+
+                // --- TRAITEMENT COMMUN (IA ou SCORING) ---
+                if (candidates.length === 0) {
+                    showMessage('Aucune citation trouvée.', 'info');
+                    extractBtn.disabled = false;
+                    return;
+                }
+
+                // Mélanger les candidats pour ne pas privilégier le premier livre scanné
+                candidates.sort(() => Math.random() - 0.5);
+
+                let finalCitations;
+                if (useAI) {
+                    // On envoie le top X à l'IA (toutes sources confondues)
+                    // On simule une "pageIndex" vide car on a perdu le lien page/livre précis pour l'instant
+                    // (Amélioration future : garder la source de chaque citation)
+                    finalCitations = await extractCitationsWithAIFromCandidates(candidates, keyword, numCitations);
+                } else {
+                    // Tri par score paradoxal purement algorithmique
+                    candidates.sort((a, b) => b.score - a.score);
+                    finalCitations = candidates.slice(0, numCitations);
+                }
+
+                displayCitations(finalCitations, useAI);
+
+            } catch (error) {
+                showMessage('Erreur : ' + error.message, 'error');
+            } finally {
+                extractBtn.disabled = false;
+            }
+        });
+
+        // Nouvelle fonction pour gérer l'IA directement depuis une liste de candidats déjà extraits
+        async function extractCitationsWithAIFromCandidates(candidates, keyword, numCitations) {
+            showMessage('🤖 Mode IA activé - Analyse transversale...', 'loading');
+
+            // On garde les 40 meilleurs candidats pour ne pas saturer le prompt
+            const topCandidates = candidates.slice(0, 40);
+            const candidateTexts = topCandidates.map(c => c.phrase).join('\n---\n');
+
+            // ... (La suite utilise la logique d'appel IA existante, on réutilise le prompt)
+            // Pour éviter de dupliquer le code du prompt, l'idéal serait de refactoriser,
+            // mais pour l'instant je vais appeler une version modifiée de extractCitationsWithAI
+            // qui accepte le texte préparé.
+
+            return await runAIAnalysis(candidateTexts, keyword, numCitations);
+        }
+
+        // Logique de sélection des livres
+        function findBestBooks(indexData, keyword, limit) {
+            // L'index peut être soit un tableau direct, soit un objet { livres: [...] }
+            // Adaptation pour votre format : "livres": [ ... ]
+            const books = Array.isArray(indexData) ? indexData : (indexData.livres || []);
+
+            if (!books || books.length === 0) {
+                console.warn("Index vide ou mal formaté", indexData);
+                return [];
+            }
+
+            const search = keyword.toLowerCase();
+
+            const scores = books.map(book => {
+                let score = 0;
+
+                // Recherche dans le titre
+                if (book.titre && book.titre.toLowerCase().includes(search)) score += 20;
+
+                // Recherche dans l'auteur
+                if (book.auteur && book.auteur.toLowerCase().includes(search)) score += 10;
+
+                // Recherche dans les thèmes
+                if (book.themes && Array.isArray(book.themes)) {
+                    if (book.themes.some(t => t.toLowerCase().includes(search))) score += 15;
+                }
+
+                // Recherche dans les mots-clés (votre nouveau format : tableau de strings)
+                if (book.mots_cles && Array.isArray(book.mots_cles)) {
+                    // On peut chercher si l'un des mots clés contient le terme recherché
+                    const match = book.mots_cles.some(mc => mc.toLowerCase().includes(search));
+                    if (match) score += 25; // Très pertinent
+                }
+
+                // Normalisation du chemin de fichier
+                // Votre index utilise "fichier", le code utilisait "fichier_source"
+                // On normalise tout vers "fichier_source" pour la suite du script
+                let filePath = book.fichier || book.fichier_source;
+
+                // On ajoute le préfixe LIVRES si nécessaire
+                if (filePath && !filePath.includes('/') && !filePath.includes('\\')) {
+                    filePath = 'LIVRES/' + filePath;
+                }
+
+                return {
+                    ...book,
+                    relevance: score,
+                    fichier_source: filePath
+                };
+            });
+
+            return scores.filter(b => b.relevance > 0).sort((a, b) => b.relevance - a.relevance).slice(0, limit);
+        }
+
+        function selectRandomBooks(books, count) {
+            const shuffled = [...books].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // Initialisation de l'affichage
+        updateMode();
+
+
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = '';
+            let charCount = 0;
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ') + '\n';
+
+                pageIndex.push({
+                    pageNumber: i,
+                    startChar: charCount,
+                    endChar: charCount + pageText.length
+                });
+
+                fullText += pageText;
+                charCount += pageText.length;
+            }
+
+            return fullText;
+        }
+
+        async function extractTextFromTXT(file) {
+            return await file.text();
+        }
+
+        async function extractTextFromEPUB(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            let fullText = '';
+
+            for (let filename in zip.files) {
+                if (filename.match(/\.(html|xhtml|htm)$/i)) {
+                    const content = await zip.files[filename].async('string');
+                    const textOnly = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+                    fullText += textOnly + '\n';
+                }
+            }
+
+            return fullText;
+        }
+
+        async function extractTextFromJSON(file) {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (data.texte_integral) return data.texte_integral;
+            if (data.contenu) {
+                return Array.isArray(data.contenu) ? data.contenu.join(' ') : data.contenu;
+            }
+            return "";
+        }
+
+        function extractCitations(text, keyword = '', numCitations = 5) {
+            const phraseRegex = /[^.!?]+[.!?]+/g;
+            let match;
+            const phrasesAvecPosition = [];
+
+            while ((match = phraseRegex.exec(text)) !== null) {
+                const phrase = match[0].trim();
+                if (phrase.length > 50 && phrase.length < 500) {
+                    phrasesAvecPosition.push({
+                        phrase: phrase,
+                        position: match.index
+                    });
+                }
+            }
+
+            let phrasesReligieuses = phrasesAvecPosition.filter(item => {
+                const phraseLower = item.phrase.toLowerCase();
+                return vocabulaireReligieux.some(mot => phraseLower.includes(mot));
+            });
+
+            if (keyword && keyword.length > 0) {
+                const keywordLower = keyword.toLowerCase();
+                const antonymes = getAntonyms(keywordLower);
+
+                // On privilégie les phrases avec le keyword
+                let keywordCandidates = phrasesReligieuses.filter(item => {
+                    const phraseLower = item.phrase.toLowerCase();
+                    return phraseLower.includes(keywordLower);
+                });
+
+                // Si on a des candidats avec le keyword, on cherche s'ils ont aussi un antonyme (paradoxe fort)
+                if (keywordCandidates.length > 0) {
+                    const paradoxCandidates = keywordCandidates.filter(item => {
+                        const phraseLower = item.phrase.toLowerCase();
+                        return antonymes.some(ant => phraseLower.includes(ant));
+                    });
+
+                    // Si on a des paradoxes explicites, on les utilise en priorité
+                    if (paradoxCandidates.length > 0) {
+                        phrasesReligieuses = paradoxCandidates;
+                    } else {
+                        // Sinon on garde les phrases avec le keyword, l'IA fera le tri
+                        phrasesReligieuses = keywordCandidates;
+                    }
+                } else if (phrasesReligieuses.length > numCitations * 3) {
+                    // Si on n'a rien avec le keyword mais beaucoup de religieux,
+                    // on garde tout et on laisse le scoring paradoxal naturel agir
+                }
+            }
+
+            if (phrasesReligieuses.length === 0) {
+                showMessage('Aucune citation avec vocabulaire religieux trouvée.', 'info');
+                return [];
+            }
+
+            const phrasesAvecScore = phrasesReligieuses.map(item => {
+                const score = calculateParadoxScore(item.phrase, keyword);
+                return {
+                    phrase: item.phrase,
+                    score: score,
+                    position: item.position
+                };
+            });
+
+            phrasesAvecScore.sort((a, b) => b.score - a.score);
+            return phrasesAvecScore.slice(0, numCitations);
+        }
+
+        function calculateParadoxScore(phrase, keyword = '') {
+            const phraseLower = phrase.toLowerCase();
+            let score = 0;
+
+            const motsParadoxaux = [
+                // Lumière et obscurité
+                ['lumière', 'ténèbres'], ['lumière', 'obscurité'], ['lumière', 'nuit'],
+                ['jour', 'nuit'], ['clarté', 'obscurité'], ['illumination', 'aveuglement'],
+                ['voir', 'aveugle'], ['révélation', 'voile'], ['dévoiler', 'cacher'],
+
+                // Vie et mort
+                ['vie', 'mort'], ['vivre', 'mourir'], ['vivant', 'mort'],
+                ['naître', 'mourir'], ['résurrection', 'mort'], ['renaissance', 'mort'],
+                ['mortel', 'immortel'], ['périssable', 'impérissable'],
+
+                // Être et néant
+                ['être', 'néant'], ['être', 'non-être'], ['existence', 'néant'],
+                ['tout', 'rien'], ['plénitude', 'vide'], ['plein', 'vide'],
+                ['présence', 'absence'], ['exister', 'anéantir'],
+
+                // Connaissance et ignorance
+                ['savoir', 'ignorer'], ['connaissance', 'ignorance'], ['sagesse', 'folie'],
+                ['connu', 'inconnu'], ['comprendre', 'incompréhensible'], ['certain', 'incertain'],
+                ['science', 'ignorance'], ['révéler', 'cacher'], ['manifeste', 'caché'],
+                ['visible', 'invisible'], ['apparaître', 'disparaître'], ['montrer', 'voiler'],
+
+                // Foi et doute
+                ['foi', 'doute'], ['croire', 'douter'], ['certitude', 'incertitude'],
+                ['confiance', 'méfiance'], ['espoir', 'désespoir'], ['espérance', 'désespérance'],
+
+                // Amour et haine
+                ['amour', 'haine'], ['aimer', 'haïr'], ['charité', 'égoïsme'],
+                ['dilection', 'aversion'], ['attraction', 'répulsion'],
+
+                // Bien et mal
+                ['bien', 'mal'], ['bon', 'mauvais'], ['vertu', 'vice'],
+                ['juste', 'injuste'], ['justice', 'injustice'], ['sainteté', 'péché'],
+                ['pur', 'impur'], ['pureté', 'impureté'], ['innocent', 'coupable'],
+
+                // Paix et guerre
+                ['paix', 'guerre'], ['repos', 'combat'], ['calme', 'tempête'],
+                ['tranquillité', 'trouble'], ['quiétude', 'agitation'], ['sérénité', 'tourment'],
+
+                // Grandeur et petitesse
+                ['grand', 'petit'], ['grandeur', 'petitesse'], ['immense', 'infime'],
+                ['élevé', 'bas'], ['haut', 'bas'], ['sublime', 'humble'],
+                ['majesté', 'humilité'], ['gloire', 'abaissement'],
+
+                // Richesse et pauvreté (paradoxe évangélique central)
+                ['riche', 'pauvre'], ['richesse', 'pauvreté'], ['posséder', 'dépouiller'],
+                ['avoir', 'manquer'], ['abondance', 'dénuement'], ['plein', 'vide'],
+                ['donner', 'recevoir'], ['perdre', 'gagner'], ['abandonner', 'garder'],
+
+                // Force et faiblesse
+                ['fort', 'faible'], ['force', 'faiblesse'], ['puissance', 'impuissance'],
+                ['pouvoir', 'impuissance'], ['capable', 'incapable'], ['victorieux', 'vaincu'],
+
+                // Liberté et servitude
+                ['libre', 'esclave'], ['liberté', 'servitude'], ['libérer', 'enchaîner'],
+                ['délivrer', 'captif'], ['autonomie', 'dépendance'], ['indépendant', 'dépendant'],
+
+                // Premier et dernier (paradoxe évangélique)
+                ['premier', 'dernier'], ['commencer', 'finir'], ['début', 'fin'],
+                ['origine', 'terme'], ['alpha', 'oméga'], ['principe', 'fin'],
+
+                // Maître et serviteur
+                ['maître', 'serviteur'], ['maître', 'esclave'], ['seigneur', 'serviteur'],
+                ['commander', 'obéir'], ['dominer', 'servir'], ['roi', 'esclave'],
+
+                // Intérieur et extérieur
+                ['dedans', 'dehors'], ['intérieur', 'extérieur'], ['intime', 'lointain'],
+                ['proche', 'lointain'], ['proximité', 'distance'], ['caché', 'manifeste'],
+
+                // Unité et multiplicité
+                ['un', 'multiple'], ['unité', 'multiplicité'], ['unique', 'divers'],
+                ['simple', 'composé'], ['simplicité', 'complexité'], ['indivisible', 'divisible'],
+
+                // Parole et silence
+                ['parole', 'silence'], ['parler', 'taire'], ['dire', 'silence'],
+                ['verbe', 'silence'], ['exprimer', 'taire'], ['proclamer', 'cacher'],
+
+                // Activité et passivité (mystique)
+                ['agir', 'subir'], ['actif', 'passif'], ['action', 'passion'],
+                ['faire', 'laisser'], ['effort', 'abandon'], ['volonté', 'abandon'],
+                ['travailler', 'reposer'], ['œuvre', 'grâce'], ['mérite', 'don'],
+
+                // Mouvement et repos
+                ['mouvement', 'repos'], ['mobile', 'immobile'], ['marcher', 'demeurer'],
+                ['aller', 'rester'], ['avancer', 'arrêter'], ['chercher', 'trouver'],
+                ['errer', 'habiter'], ['exil', 'demeure'], ['voyage', 'séjour'],
+
+                // Temps et éternité
+                ['temps', 'éternité'], ['temporel', 'éternel'], ['éphémère', 'éternel'],
+                ['passager', 'permanent'], ['transitoire', 'immuable'], ['changeant', 'immuable'],
+                ['mortel', 'immortel'], ['corruptible', 'incorruptible'],
+
+                // Terre et ciel
+                ['terre', 'ciel'], ['terrestre', 'céleste'], ['bas', 'haut'],
+                ['matériel', 'spirituel'], ['corporel', 'spirituel'], ['chair', 'esprit'],
+                ['charnel', 'spirituel'], ['monde', 'ciel'], ['séculier', 'sacré'],
+
+                // Sacré et profane
+                ['sacré', 'profane'], ['saint', 'profane'], ['divin', 'humain'],
+                ['surnaturel', 'naturel'], ['grâce', 'nature'], ['transcendant', 'immanent'],
+
+                // Soi et autre (mystique de l'union)
+                ['soi', 'autre'], ['je', 'tu'], ['moi', 'toi'],
+                ['propre', 'étranger'], ['même', 'autre'], ['identité', 'altérité'],
+
+                // Vérité et erreur
+                ['vrai', 'faux'], ['vérité', 'erreur'], ['vérité', 'mensonge'],
+                ['authentique', 'illusoire'], ['réel', 'apparent'], ['être', 'paraître'],
+
+                // Joie et tristesse
+                ['joie', 'tristesse'], ['joie', 'douleur'], ['consolation', 'désolation'],
+                ['allégresse', 'affliction'], ['bonheur', 'malheur'], ['béatitude', 'souffrance'],
+
+                // Souffrance et gloire (kénose/passion)
+                ['souffrance', 'gloire'], ['croix', 'gloire'], ['humiliation', 'exaltation'],
+                ['abaissement', 'élévation'], ['passion', 'résurrection'], ['mort', 'résurrection'],
+
+                // Plénitude et vide (mystique apophatique)
+                ['plénitude', 'dépouillement'], ['tout', 'néant'], ['posséder', 'renoncer'],
+                ['avoir', 'être'], ['accumulation', 'dépouillement'], ['saisir', 'lâcher'],
+
+                // Désir et détachement
+                ['désir', 'détachement'], ['vouloir', 'renoncer'], ['convoiter', 'abandonner'],
+                ['attacher', 'détacher'], ['tenir', 'lâcher'], ['garder', 'donner'],
+
+                // Parler et taire (mystique apophatique)
+                ['affirmer', 'nier'], ['dire', 'indicible'], ['nommer', 'innommable'],
+                ['exprimer', 'inexprimable'], ['comprendre', 'incompréhensible'],
+
+                // Repos et effort
+                ['repos', 'effort'], ['reposer', 'travailler'], ['sommeil', 'veille'],
+                ['contempler', 'agir'], ['quiétude', 'ascèse'], ['passivité', 'action'],
+
+                // Nourrir et jeûner
+                ['nourrir', 'jeûner'], ['manger', 'jeûner'], ['festin', 'jeûne'],
+                ['satiété', 'faim'], ['rassasier', 'affamer'], ['abondance', 'abstinence'],
+
+                // Ouverture et fermeture
+                ['ouvrir', 'fermer'], ['ouvert', 'fermé'], ['accueillir', 'refuser'],
+                ['recevoir', 'rejeter'], ['porte ouverte', 'porte fermée'],
+
+                // Sommeil et éveil (spirituel)
+                ['éveil', 'sommeil'], ['éveillé', 'endormi'], ['veille', 'sommeil'],
+                ['vigilance', 'torpeur'], ['lucide', 'aveugle'],
+
+                // Monter et descendre (kénose/ascension)
+                ['monter', 'descendre'], ['ascension', 'descente'], ['élever', 'abaisser'],
+                ['grimper', 'tomber'], ['lever', 'baisser'],
+
+                // Rassembler et disperser
+                ['rassembler', 'disperser'], ['unir', 'séparer'], ['joindre', 'diviser'],
+                ['réunir', 'éparpiller'], ['concentrer', 'dissiper'],
+
+                // Remplir et vider (kénose)
+                ['remplir', 'vider'], ['combler', 'creuser'], ['garnir', 'dépouiller'],
+                ['emplir', 'vider'], ['saturer', 'épuiser'],
+
+                // Construire et détruire
+                ['construire', 'détruire'], ['édifier', 'démolir'], ['bâtir', 'ruiner'],
+                ['créer', 'anéantir'], ['fonder', 'renverser'],
+
+                // Lier et délier (pouvoir des clés)
+                ['lier', 'délier'], ['attacher', 'détacher'], ['enchaîner', 'libérer'],
+                ['nouer', 'dénouer'], ['retenir', 'relâcher'],
+
+                // Montrer et cacher (mystère)
+                ['révéler', 'cacher'], ['dévoiler', 'voiler'], ['montrer', 'dissimuler'],
+                ['manifester', 'mystère'], ['apparent', 'secret'], ['public', 'secret'],
+
+                // Nouveau et ancien
+                ['nouveau', 'ancien'], ['neuf', 'vieux'], ['recommencer', 'finir'],
+                ['renaissance', 'vieillesse'], ['innovation', 'tradition']
+            ];
+
+            motsParadoxaux.forEach(paire => {
+                if (phraseLower.includes(paire[0]) && phraseLower.includes(paire[1])) {
+                    score += 10;
+                }
+            });
+
+            if (keyword && phraseLower.includes(keyword.toLowerCase())) {
+                score += 15;
+            }
+
+            const indicateursParadoxe = ['mais', 'pourtant', 'cependant', 'toutefois',
+                'néanmoins', 'malgré', 'bien que', 'quoique'];
+            indicateursParadoxe.forEach(mot => {
+                if (phraseLower.includes(mot)) score += 5;
+            });
+
+            if (phrase.length > 100 && phrase.length < 300) score += 2;
+
+            return score;
+        }
+
+        function getAntonyms(keyword) {
+            const antonymesMap = {
+                // Lumière et obscurité
+                'lumière': ['ténèbres', 'obscurité', 'ombre', 'nuit', 'noirceur', 'opacité'],
+                'ténèbres': ['lumière', 'clarté', 'jour', 'luminosité', 'éclat'],
+                'obscurité': ['lumière', 'clarté', 'luminosité', 'transparence'],
+                'jour': ['nuit', 'ténèbres', 'obscurité'],
+                'nuit': ['jour', 'lumière', 'aube', 'aurore'],
+                'clarté': ['obscurité', 'ténèbres', 'opacité'],
+                'illumination': ['aveuglement', 'obscurité', 'ignorance'],
+                'aveugle': ['voyant', 'clairvoyant', 'lucide'],
+                'voir': ['aveugler', 'ignorer', 'méconnaître'],
+
+                // Vie et mort
+                'vie': ['mort', 'trépas', 'décès', 'agonie', 'fin'],
+                'mort': ['vie', 'naissance', 'renaissance', 'résurrection'],
+                'vivre': ['mourir', 'périr', 'expirer', 'trépasser'],
+                'mourir': ['vivre', 'naître', 'renaître', 'ressusciter'],
+                'vivant': ['mort', 'défunt', 'inanimé', 'cadavre'],
+                'naître': ['mourir', 'disparaître', 'finir'],
+                'naissance': ['mort', 'fin', 'terme', 'décès'],
+                'résurrection': ['mort', 'ensevelissement', 'tombeau'],
+                'mortel': ['immortel', 'éternel', 'impérissable'],
+                'immortel': ['mortel', 'périssable', 'éphémère'],
+                'périssable': ['impérissable', 'éternel', 'immortel'],
+
+                // Être et néant
+                'être': ['néant', 'non-être', 'rien', 'vide'],
+                'néant': ['être', 'existence', 'tout', 'plénitude'],
+                'existence': ['néant', 'non-existence', 'absence'],
+                'exister': ['néant', 'anéantir', 'disparaître'],
+                'tout': ['rien', 'néant', 'vide', 'absence'],
+                'rien': ['tout', 'plénitude', 'être', 'existence'],
+                'plénitude': ['vide', 'vacuité', 'néant', 'manque'],
+                'plein': ['vide', 'creux', 'vacant', 'dépouillé'],
+                'vide': ['plein', 'rempli', 'comblé', 'saturé'],
+                'présence': ['absence', 'éloignement', 'manque'],
+                'absence': ['présence', 'proximité', 'présent'],
+                'anéantir': ['créer', 'être', 'exister', 'subsister'],
+
+                // Connaissance et ignorance
+                'savoir': ['ignorer', 'méconnaître', 'ignorer'],
+                'ignorer': ['savoir', 'connaître', 'comprendre'],
+                'connaissance': ['ignorance', 'méconnaissance', 'aveuglement'],
+                'ignorance': ['connaissance', 'savoir', 'science', 'sagesse'],
+                'sagesse': ['folie', 'sottise', 'déraison', 'ignorance'],
+                'folie': ['sagesse', 'raison', 'sens', 'prudence'],
+                'sage': ['fou', 'insensé', 'ignorant'],
+                'fou': ['sage', 'sensé', 'raisonnable'],
+                'connu': ['inconnu', 'ignoré', 'caché', 'mystérieux'],
+                'inconnu': ['connu', 'familier', 'révélé', 'manifeste'],
+                'comprendre': ['ignorer', 'méconnaître', 'incompréhensible'],
+                'incompréhensible': ['compréhensible', 'clair', 'évident', 'intelligible'],
+                'certain': ['incertain', 'douteux', 'hésitant'],
+                'incertain': ['certain', 'sûr', 'assuré', 'évident'],
+                'science': ['ignorance', 'méconnaissance', 'aveuglement'],
+                'révéler': ['cacher', 'voiler', 'dissimuler', 'occulter'],
+                'cacher': ['révéler', 'montrer', 'dévoiler', 'manifester'],
+                'manifeste': ['caché', 'secret', 'occulte', 'mystérieux'],
+                'caché': ['manifeste', 'visible', 'apparent', 'révélé'],
+                'visible': ['invisible', 'caché', 'occulte', 'secret'],
+                'invisible': ['visible', 'apparent', 'manifeste', 'évident'],
+                'apparaître': ['disparaître', 'cacher', 'voiler'],
+                'disparaître': ['apparaître', 'surgir', 'se montrer'],
+                'montrer': ['cacher', 'voiler', 'dissimuler'],
+                'voiler': ['dévoiler', 'révéler', 'montrer', 'découvrir'],
+                'dévoiler': ['voiler', 'cacher', 'dissimuler', 'recouvrir'],
+                'secret': ['public', 'manifeste', 'ouvert', 'révélé'],
+                'mystère': ['révélation', 'évidence', 'clarté'],
+
+                // Foi et doute
+                'foi': ['doute', 'incrédulité', 'incroyance', 'scepticisme'],
+                'doute': ['foi', 'certitude', 'croyance', 'conviction'],
+                'croire': ['douter', 'mécroire', 'renier'],
+                'douter': ['croire', 'avoir foi', 'être certain'],
+                'certitude': ['doute', 'incertitude', 'hésitation'],
+                'confiance': ['méfiance', 'défiance', 'suspicion', 'doute'],
+                'méfiance': ['confiance', 'foi', 'assurance'],
+                'espoir': ['désespoir', 'désespérance', 'découragement'],
+                'désespoir': ['espoir', 'espérance', 'confiance'],
+                'espérance': ['désespérance', 'désespoir', 'découragement'],
+                'croyant': ['incroyant', 'infidèle', 'mécréant', 'athée'],
+                'fidèle': ['infidèle', 'renégat', 'apostat', 'traître'],
+
+                // Amour et haine
+                'amour': ['haine', 'aversion', 'répulsion', 'hostilité', 'indifférence'],
+                'haine': ['amour', 'charité', 'affection', 'tendresse'],
+                'aimer': ['haïr', 'détester', 'abhorrer', 'mépriser'],
+                'haïr': ['aimer', 'chérir', 'adorer'],
+                'charité': ['égoïsme', 'avarice', 'cupidité', 'haine'],
+                'égoïsme': ['charité', 'altruisme', 'générosité', 'don'],
+                'dilection': ['aversion', 'répulsion', 'haine'],
+                'aversion': ['dilection', 'attraction', 'amour'],
+                'attraction': ['répulsion', 'aversion', 'rejet'],
+                'répulsion': ['attraction', 'attrait', 'amour'],
+
+                // Bien et mal
+                'bien': ['mal', 'vice', 'péché', 'faute', 'crime'],
+                'mal': ['bien', 'vertu', 'bonté', 'justice'],
+                'bon': ['mauvais', 'méchant', 'pervers', 'vicieux'],
+                'mauvais': ['bon', 'bienfaisant', 'vertueux'],
+                'vertu': ['vice', 'péché', 'défaut', 'mal'],
+                'vice': ['vertu', 'qualité', 'bien', 'mérite'],
+                'juste': ['injuste', 'inique', 'inéquitable'],
+                'injuste': ['juste', 'équitable', 'droit'],
+                'justice': ['injustice', 'iniquité', 'inéquité'],
+                'injustice': ['justice', 'équité', 'droiture'],
+                'sainteté': ['péché', 'vice', 'corruption', 'impiété'],
+                'saint': ['pécheur', 'impie', 'profane', 'damné'],
+                'péché': ['sainteté', 'grâce', 'vertu', 'pureté'],
+                'pécheur': ['saint', 'juste', 'élu', 'bienheureux'],
+                'pur': ['impur', 'souillé', 'corrompu', 'contaminé'],
+                'impur': ['pur', 'innocent', 'immaculé', 'saint'],
+                'pureté': ['impureté', 'souillure', 'corruption'],
+                'impureté': ['pureté', 'innocence', 'sainteté'],
+                'innocent': ['coupable', 'criminel', 'fautif'],
+                'coupable': ['innocent', 'irréprochable', 'pur'],
+
+                // Paix et guerre
+                'paix': ['guerre', 'conflit', 'combat', 'lutte', 'hostilité'],
+                'guerre': ['paix', 'harmonie', 'concorde', 'repos'],
+                'repos': ['combat', 'lutte', 'effort', 'agitation'],
+                'combat': ['repos', 'paix', 'trêve', 'calme'],
+                'calme': ['tempête', 'agitation', 'trouble', 'tumulte'],
+                'tempête': ['calme', 'sérénité', 'tranquillité', 'bonace'],
+                'tranquillité': ['trouble', 'agitation', 'tumulte', 'tourment'],
+                'trouble': ['tranquillité', 'calme', 'paix', 'sérénité'],
+                'quiétude': ['agitation', 'trouble', 'inquiétude', 'tourment'],
+                'agitation': ['quiétude', 'calme', 'repos', 'paix'],
+                'sérénité': ['tourment', 'angoisse', 'trouble', 'agitation'],
+                'tourment': ['sérénité', 'paix', 'repos', 'quiétude'],
+
+                // Grandeur et petitesse
+                'grand': ['petit', 'infime', 'minuscule', 'humble'],
+                'petit': ['grand', 'immense', 'énorme', 'élevé'],
+                'grandeur': ['petitesse', 'humilité', 'bassesse', 'mesquinerie'],
+                'petitesse': ['grandeur', 'majesté', 'magnificence', 'élévation'],
+                'immense': ['infime', 'minuscule', 'microscopique'],
+                'infime': ['immense', 'énorme', 'gigantesque', 'colossal'],
+                'élevé': ['bas', 'inférieur', 'vil', 'abject'],
+                'bas': ['élevé', 'haut', 'sublime', 'supérieur'],
+                'haut': ['bas', 'inférieur', 'profond', 'abject'],
+                'sublime': ['vil', 'bas', 'abject', 'humble'],
+                'vil': ['sublime', 'noble', 'élevé', 'digne'],
+                'majesté': ['humilité', 'bassesse', 'petitesse'],
+                'gloire': ['abaissement', 'humiliation', 'opprobre', 'honte'],
+                'abaissement': ['gloire', 'élévation', 'exaltation', 'grandeur'],
+                'élévation': ['abaissement', 'chute', 'déchéance'],
+                'exaltation': ['humiliation', 'abaissement', 'avilissement'],
+                'humiliation': ['exaltation', 'gloire', 'honneur', 'dignité'],
+
+                // Richesse et pauvreté
+                'riche': ['pauvre', 'indigent', 'démuni', 'dépouillé'],
+                'pauvre': ['riche', 'opulent', 'fortuné', 'nanti'],
+                'richesse': ['pauvreté', 'indigence', 'dénuement', 'misère'],
+                'pauvreté': ['richesse', 'opulence', 'fortune', 'abondance'],
+                'posséder': ['dépouiller', 'manquer', 'perdre', 'renoncer'],
+                'dépouiller': ['posséder', 'avoir', 'garder', 'accumuler'],
+                'avoir': ['manquer', 'perdre', 'être privé', 'renoncer'],
+                'manquer': ['avoir', 'posséder', 'abonder', 'regorger'],
+                'abondance': ['dénuement', 'pénurie', 'manque', 'privation'],
+                'dénuement': ['abondance', 'richesse', 'opulence', 'plénitude'],
+                'donner': ['recevoir', 'prendre', 'garder', 'retenir'],
+                'recevoir': ['donner', 'offrir', 'prodiguer'],
+                'perdre': ['gagner', 'trouver', 'acquérir', 'obtenir'],
+                'gagner': ['perdre', 'perdre', 'sacrifier', 'renoncer'],
+                'abandonner': ['garder', 'retenir', 'conserver', 'posséder'],
+                'garder': ['abandonner', 'perdre', 'donner', 'lâcher'],
+
+                // Force et faiblesse
+                'fort': ['faible', 'débile', 'impuissant', 'fragile'],
+                'faible': ['fort', 'puissant', 'robuste', 'vigoureux'],
+                'force': ['faiblesse', 'débilité', 'impuissance', 'fragilité'],
+                'faiblesse': ['force', 'puissance', 'vigueur', 'robustesse'],
+                'puissance': ['impuissance', 'faiblesse', 'incapacité'],
+                'impuissance': ['puissance', 'force', 'capacité', 'pouvoir'],
+                'pouvoir': ['impuissance', 'incapacité', 'faiblesse'],
+                'capable': ['incapable', 'impuissant', 'inapte'],
+                'incapable': ['capable', 'apte', 'compétent'],
+                'victorieux': ['vaincu', 'défait', 'écrasé'],
+                'vaincu': ['victorieux', 'vainqueur', 'triomphant'],
+                'victoire': ['défaite', 'échec', 'revers'],
+                'défaite': ['victoire', 'triomphe', 'succès'],
+
+                // Liberté et servitude
+                'libre': ['esclave', 'captif', 'prisonnier', 'enchaîné'],
+                'esclave': ['libre', 'affranchi', 'libéré', 'maître'],
+                'liberté': ['servitude', 'esclavage', 'captivité', 'asservissement'],
+                'servitude': ['liberté', 'affranchissement', 'indépendance'],
+                'libérer': ['enchaîner', 'asservir', 'capturer', 'emprisonner'],
+                'enchaîner': ['libérer', 'affranchir', 'délivrer', 'délier'],
+                'délivrer': ['captif', 'enchaîner', 'emprisonner'],
+                'captif': ['libre', 'délivré', 'libéré', 'affranchi'],
+                'autonomie': ['dépendance', 'subordination', 'asservissement'],
+                'dépendance': ['autonomie', 'indépendance', 'liberté'],
+                'indépendant': ['dépendant', 'subordonné', 'assujetti'],
+                'dépendant': ['indépendant', 'autonome', 'libre'],
+
+                // Premier et dernier
+                'premier': ['dernier', 'ultime', 'final', 'terminal'],
+                'dernier': ['premier', 'initial', 'originel', 'primordial'],
+                'commencer': ['finir', 'terminer', 'achever', 'conclure'],
+                'finir': ['commencer', 'débuter', 'initier', 'inaugurer'],
+                'début': ['fin', 'terme', 'conclusion', 'achèvement'],
+                'fin': ['début', 'commencement', 'origine', 'principe'],
+                'origine': ['terme', 'fin', 'aboutissement', 'conclusion'],
+                'terme': ['origine', 'principe', 'source', 'commencement'],
+                'alpha': ['oméga', 'fin', 'terme'],
+                'oméga': ['alpha', 'origine', 'principe'],
+                'principe': ['fin', 'terme', 'aboutissement', 'conclusion'],
+
+                // Maître et serviteur
+                'maître': ['serviteur', 'esclave', 'sujet', 'vassal'],
+                'serviteur': ['maître', 'seigneur', 'patron', 'chef'],
+                'seigneur': ['serviteur', 'vassal', 'sujet', 'serf'],
+                'commander': ['obéir', 'servir', 'se soumettre'],
+                'obéir': ['commander', 'ordonner', 'diriger', 'régner'],
+                'dominer': ['servir', 'obéir', 'se soumettre', 'être soumis'],
+                'servir': ['dominer', 'commander', 'régner', 'gouverner'],
+                'roi': ['esclave', 'sujet', 'serviteur', 'vassal'],
+                'souverain': ['sujet', 'vassal', 'serviteur'],
+
+                // Intérieur et extérieur
+                'dedans': ['dehors', 'extérieur', 'hors', 'à l\'extérieur'],
+                'dehors': ['dedans', 'intérieur', 'au-dedans'],
+                'intérieur': ['extérieur', 'dehors', 'externe', 'superficiel'],
+                'extérieur': ['intérieur', 'intime', 'profond', 'dedans'],
+                'intime': ['lointain', 'distant', 'extérieur', 'étranger'],
+                'lointain': ['proche', 'intime', 'voisin', 'adjacent'],
+                'proche': ['lointain', 'éloigné', 'distant', 'reculé'],
+                'éloigné': ['proche', 'voisin', 'adjacent', 'contigu'],
+                'proximité': ['distance', 'éloignement', 'écart'],
+                'distance': ['proximité', 'voisinage', 'contiguïté'],
+
+                // Unité et multiplicité
+                'un': ['multiple', 'divers', 'nombreux', 'pluriel'],
+                'multiple': ['un', 'unique', 'seul', 'singulier'],
+                'unité': ['multiplicité', 'diversité', 'pluralité'],
+                'multiplicité': ['unité', 'unicité', 'singularité'],
+                'unique': ['multiple', 'divers', 'pluriel', 'nombreux'],
+                'divers': ['unique', 'un', 'uniforme', 'identique'],
+                'simple': ['composé', 'complexe', 'multiple', 'composite'],
+                'composé': ['simple', 'élémentaire', 'pur', 'unique'],
+                'simplicité': ['complexité', 'complication', 'multiplicité'],
+                'complexité': ['simplicité', 'simplicité', 'pureté'],
+                'indivisible': ['divisible', 'sécable', 'séparable'],
+                'divisible': ['indivisible', 'insécable', 'inséparable'],
+
+                // Parole et silence
+                'parole': ['silence', 'mutisme', 'taciturnité'],
+                'silence': ['parole', 'verbe', 'discours', 'bruit'],
+                'parler': ['taire', 'se taire', 'garder silence'],
+                'taire': ['parler', 'dire', 'prononcer', 'exprimer'],
+                'dire': ['taire', 'celer', 'cacher', 'dissimuler'],
+                'verbe': ['silence', 'mutisme', 'taciturnité'],
+                'exprimer': ['taire', 'cacher', 'dissimuler', 'occulter'],
+                'proclamer': ['cacher', 'taire', 'dissimuler', 'voiler'],
+                'muet': ['éloquent', 'bavard', 'loquace', 'disert'],
+                'éloquent': ['muet', 'silencieux', 'taciturne'],
+
+                // Activité et passivité
+                'agir': ['subir', 'pâtir', 'souffrir', 'endurer'],
+                'subir': ['agir', 'faire', 'accomplir', 'œuvrer'],
+                'actif': ['passif', 'inactif', 'inerte', 'oisif'],
+                'passif': ['actif', 'agissant', 'actif', 'dynamique'],
+                'action': ['passion', 'inaction', 'repos', 'passivité'],
+                'passion': ['action', 'activité', 'agir'],
+                'faire': ['laisser', 'subir', 's\'abstenir', 'ne rien faire'],
+                'laisser': ['faire', 'agir', 'intervenir', 'œuvrer'],
+                'effort': ['abandon', 'relâchement', 'repos', 'passivité'],
+                'abandon': ['effort', 'résistance', 'lutte', 'combat'],
+                'volonté': ['abandon', 'résignation', 'soumission'],
+                'travailler': ['reposer', 'se reposer', 'chômer', 'cesser'],
+                'œuvre': ['grâce', 'don', 'cadeau', 'faveur'],
+                'grâce': ['œuvre', 'mérite', 'effort', 'travail'],
+                'mérite': ['grâce', 'don', 'faveur', 'cadeau'],
+                'don': ['mérite', 'œuvre', 'effort', 'récompense'],
+
+                // Mouvement et repos
+                'mouvement': ['repos', 'immobilité', 'stase', 'arrêt'],
+                'repos': ['mouvement', 'agitation', 'activité', 'motion'],
+                'mobile': ['immobile', 'fixe', 'stationnaire', 'stable'],
+                'immobile': ['mobile', 'mouvant', 'agile', 'instable'],
+                'marcher': ['demeurer', 'rester', 's\'arrêter', 'stationner'],
+                'demeurer': ['partir', 'quitter', 'marcher', 'voyager'],
+                'aller': ['rester', 'demeurer', 'stationner', 's\'arrêter'],
+                'rester': ['partir', 'aller', 'quitter', 'se mouvoir'],
+                'avancer': ['reculer', 'arrêter', 'stopper', 'immobiliser'],
+                'arrêter': ['avancer', 'progresser', 'continuer', 'poursuivre'],
+                'chercher': ['trouver', 'posséder', 'avoir'],
+                'trouver': ['chercher', 'perdre', 'égarer'],
+                'errer': ['habiter', 'demeurer', 'résider', 'séjourner'],
+                'habiter': ['errer', 'vagabonder', 'voyager', 'nomadiser'],
+                'exil': ['demeure', 'patrie', 'foyer', 'résidence'],
+                'demeure': ['exil', 'départ', 'errance', 'nomadisme'],
+                'voyage': ['séjour', 'résidence', 'demeure', 'installation'],
+                'séjour': ['voyage', 'départ', 'exode', 'migration'],
+
+                // Temps et éternité
+                'temps': ['éternité', 'intemporel', 'sempiternel'],
+                'éternité': ['temps', 'temporalité', 'durée', 'instant'],
+                'temporel': ['éternel', 'intemporel', 'sempiternel', 'permanent'],
+                'éternel': ['temporel', 'passager', 'éphémère', 'transitoire'],
+                'éphémère': ['éternel', 'permanent', 'durable', 'impérissable'],
+                'permanent': ['éphémère', 'passager', 'transitoire', 'fugace'],
+                'passager': ['permanent', 'durable', 'éternel', 'stable'],
+                'transitoire': ['permanent', 'stable', 'durable', 'immuable'],
+                'changeant': ['immuable', 'invariable', 'constant', 'stable'],
+                'immuable': ['changeant', 'variable', 'instable', 'fluctuant'],
+                'corruptible': ['incorruptible', 'impérissable', 'éternel'],
+                'incorruptible': ['corruptible', 'périssable', 'altérable'],
+
+                // Terre et ciel
+                'terre': ['ciel', 'paradis', 'empyrée', 'firmament'],
+                'ciel': ['terre', 'monde', 'bas monde', 'ici-bas'],
+                'terrestre': ['céleste', 'éthéré', 'divin', 'paradisiaque'],
+                'céleste': ['terrestre', 'mondain', 'séculier', 'temporel'],
+                'matériel': ['spirituel', 'immatériel', 'incorporel'],
+                'spirituel': ['matériel', 'corporel', 'charnel', 'physique'],
+                'corporel': ['spirituel', 'incorporel', 'immatériel'],
+                'chair': ['esprit', 'âme', 'spirituel'],
+                'esprit': ['chair', 'corps', 'matière', 'corporel'],
+                'charnel': ['spirituel', 'incorporel', 'immatériel'],
+                'monde': ['ciel', 'paradis', 'royaume', 'éternité'],
+                'séculier': ['sacré', 'religieux', 'spirituel', 'divin'],
+
+                // Sacré et profane
+                'sacré': ['profane', 'séculier', 'laïc', 'temporel'],
+                'profane': ['sacré', 'saint', 'consacré', 'béni'],
+                'saint': ['profane', 'pécheur', 'impie', 'sacrilège'],
+                'divin': ['humain', 'mortel', 'terrestre', 'mondain'],
+                'humain': ['divin', 'céleste', 'transcendant', 'surnaturel'],
+                'surnaturel': ['naturel', 'ordinaire', 'commun', 'profane'],
+                'naturel': ['surnaturel', 'miraculeux', 'prodigieux', 'divin'],
+                'transcendant': ['immanent', 'terrestre', 'mondain'],
+                'immanent': ['transcendant', 'au-delà', 'supérieur'],
+
+                // Soi et autre
+                'soi': ['autre', 'autrui', 'étranger', 'prochain'],
+                'autre': ['soi', 'même', 'propre', 'identique'],
+                'je': ['tu', 'il', 'autre', 'autrui'],
+                'tu': ['je', 'moi', 'soi'],
+                'moi': ['toi', 'lui', 'autre', 'autrui'],
+                'toi': ['moi', 'je', 'soi'],
+                'propre': ['étranger', 'autre', 'autrui', 'externe'],
+                'étranger': ['familier', 'propre', 'intime', 'proche'],
+                'même': ['autre', 'différent', 'distinct', 'divers'],
+                'identité': ['altérité', 'différence', 'distinction'],
+                'altérité': ['identité', 'mêmeté', 'similitude'],
+
+                // Vérité et erreur
+                'vrai': ['faux', 'erroné', 'inexact', 'mensonger'],
+                'faux': ['vrai', 'véridique', 'exact', 'authentique'],
+                'vérité': ['erreur', 'mensonge', 'fausseté', 'illusion'],
+                'erreur': ['vérité', 'exactitude', 'justesse', 'véracité'],
+                'mensonge': ['vérité', 'véracité', 'sincérité', 'franchise'],
+                'authentique': ['faux', 'illusoire', 'trompeur', 'factice'],
+                'illusoire': ['réel', 'authentique', 'véritable', 'effectif'],
+                'réel': ['apparent', 'illusoire', 'fictif', 'chimérique'],
+                'apparent': ['réel', 'véritable', 'authentique', 'effectif'],
+                'être': ['paraître', 'sembler', 'apparaître'],
+                'paraître': ['être', 'exister réellement'],
+
+                // Joie et tristesse
+                'joie': ['tristesse', 'douleur', 'peine', 'affliction', 'chagrin'],
+                'tristesse': ['joie', 'allégresse', 'gaieté', 'félicité'],
+                'douleur': ['joie', 'plaisir', 'délice', 'félicité'],
+                'consolation': ['désolation', 'affliction', 'détresse'],
+                'désolation': ['consolation', 'réconfort', 'soulagement'],
+                'allégresse': ['affliction', 'tristesse', 'désolation', 'peine'],
+                'affliction': ['allégresse', 'joie', 'consolation', 'félicité'],
+                'bonheur': ['malheur', 'infortune', 'misère', 'détresse'],
+                'malheur': ['bonheur', 'félicité', 'béatitude', 'prospérité'],
+                'béatitude': ['souffrance', 'misère', 'tourment', 'affliction'],
+                'souffrance': ['béatitude', 'joie', 'délice', 'volupté'],
+
+                // Souffrance et gloire
+                'souffrance': ['gloire', 'béatitude', 'joie', 'honneur'],
+                'gloire': ['souffrance', 'humiliation', 'opprobre', 'ignominie'],
+                'croix': ['gloire', 'triomphe', 'résurrection', 'couronne'],
+                'passion': ['résurrection', 'gloire', 'triomphe', 'victoire'],
+                'résurrection': ['passion', 'mort', 'crucifixion', 'tombeau'],
+
+                // Désir et détachement
+                'désir': ['détachement', 'renoncement', 'abandon', 'indifférence'],
+                'détachement': ['désir', 'attachement', 'convoitise', 'avidité'],
+                'vouloir': ['renoncer', 'abandonner', 'lâcher', 'délaisser'],
+                'renoncer': ['désirer', 'vouloir', 'convoiter', 'ambitionner'],
+                'convoiter': ['renoncer', 'abandonner', 'délaisser', 'mépriser'],
+                'attacher': ['détacher', 'délier', 'libérer', 'affranchir'],
+                'détacher': ['attacher', 'lier', 'enchaîner', 'fixer'],
+                'tenir': ['lâcher', 'abandonner', 'relâcher', 'libérer'],
+                'lâcher': ['tenir', 'saisir', 'agripper', 'retenir'],
+
+                // Parler et taire (apophatisme)
+                'affirmer': ['nier', 'démentir', 'réfuter', 'contester'],
+                'nier': ['affirmer', 'confirmer', 'attester', 'certifier'],
+                'indicible': ['exprimable', 'dicible', 'énonçable'],
+                'innommable': ['nommable', 'désignable', 'définissable'],
+                'inexprimable': ['exprimable', 'dicible', 'énonçable'],
+                'nommer': ['innommable', 'indicible', 'ineffable'],
+
+                // Humilité et orgueil
+                'humble': ['orgueilleux', 'hautain', 'fier', 'arrogant', 'superbe'],
+                'orgueilleux': ['humble', 'modeste', 'effacé', 'simple'],
+                'humilité': ['orgueil', 'vanité', 'fierté', 'arrogance', 'superbe'],
+                'orgueil': ['humilité', 'modestie', 'simplicité', 'effacement'],
+                'modestie': ['vanité', 'orgueil', 'suffisance', 'prétention'],
+                'vanité': ['humilité', 'modestie', 'simplicité'],
+
+                // Ouverture et fermeture
+                'ouvrir': ['fermer', 'clore', 'boucher', 'obstruer'],
+                'fermer': ['ouvrir', 'ouvrir', 'déboucher', 'dégager'],
+                'ouvert': ['fermé', 'clos', 'bouché', 'obstrué'],
+                'fermé': ['ouvert', 'béant', 'accessible', 'disponible'],
+                'accueillir': ['refuser', 'rejeter', 'repousser', 'écarter'],
+                'refuser': ['accueillir', 'accepter', 'recevoir', 'agréer'],
+                'rejeter': ['recevoir', 'accepter', 'accueillir', 'adopter'],
+
+                // Sommeil et éveil
+                'éveil': ['sommeil', 'assoupissement', 'torpeur', 'léthargie'],
+                'sommeil': ['éveil', 'veille', 'vigilance', 'insomnie'],
+                'éveillé': ['endormi', 'assoupi', 'somnolent'],
+                'endormi': ['éveillé', 'vigilant', 'alerte', 'lucide'],
+                'veille': ['sommeil', 'assoupissement', 'léthargie'],
+                'vigilance': ['torpeur', 'somnolence', 'assoupissement'],
+                'torpeur': ['vigilance', 'éveil', 'lucidité', 'vivacité'],
+                'lucide': ['aveugle', 'endormi', 'inconscient', 'confus'],
+
+                // Monter et descendre
+                'monter': ['descendre', 'tomber', 'choir', 'déchoir'],
+                'descendre': ['monter', 'gravir', 'escalader', 's\'élever'],
+                'ascension': ['descente', 'chute', 'déchéance', 'abaissement'],
+                'descente': ['ascension', 'montée', 'élévation', 'ascension'],
+                'élever': ['abaisser', 'rabaisser', 'humilier', 'avilir'],
+                'abaisser': ['élever', 'hausser', 'exhausser', 'exalter'],
+                'grimper': ['tomber', 'chuter', 'dégringoler', 'choir'],
+                'tomber': ['monter', 'grimper', 's\'élever', 'se dresser'],
+                'lever': ['baisser', 'abaisser', 'descendre', 'rabattre'],
+                'baisser': ['lever', 'élever', 'hausser', 'dresser'],
+                'chute': ['ascension', 'élévation', 'montée', 'essor'],
+
+                // Rassembler et disperser
+                'rassembler': ['disperser', 'éparpiller', 'disséminer', 'répandre'],
+                'disperser': ['rassembler', 'réunir', 'grouper', 'concentrer'],
+                'unir': ['séparer', 'diviser', 'désunir', 'dissocier'],
+                'séparer': ['unir', 'joindre', 'réunir', 'rassembler'],
+                'joindre': ['séparer', 'disjoindre', 'diviser', 'écarter'],
+                'diviser': ['unir', 'réunir', 'joindre', 'rassembler'],
+                'réunir': ['séparer', 'éparpiller', 'disperser', 'dissocier'],
+                'éparpiller': ['rassembler', 'réunir', 'concentrer', 'grouper'],
+                'concentrer': ['disperser', 'éparpiller', 'disséminer'],
+                'dissiper': ['concentrer', 'rassembler', 'condenser'],
+
+                // Remplir et vider
+                'remplir': ['vider', 'évacuer', 'épuiser', 'tarir'],
+                'vider': ['remplir', 'emplir', 'combler', 'garnir'],
+                'combler': ['creuser', 'vider', 'épuiser', 'tarir'],
+                'creuser': ['combler', 'remplir', 'boucher', 'emplir'],
+                'garnir': ['dépouiller', 'dégarnir', 'vider', 'dénuder'],
+                'dépouiller': ['garnir', 'revêtir', 'habiller', 'parer'],
+                'emplir': ['vider', 'évacuer', 'épuiser', 'tarir'],
+                'saturer': ['épuiser', 'vider', 'tarir', 'assécher'],
+                'épuiser': ['remplir', 'combler', 'alimenter', 'fournir'],
+
+                // Construire et détruire
+                'construire': ['détruire', 'démolir', 'abattre', 'raser'],
+                'détruire': ['construire', 'édifier', 'bâtir', 'ériger'],
+                'édifier': ['démolir', 'détruire', 'abattre', 'renverser'],
+                'démolir': ['édifier', 'construire', 'ériger', 'bâtir'],
+                'bâtir': ['ruiner', 'détruire', 'démolir', 'abattre'],
+                'ruiner': ['édifier', 'construire', 'bâtir', 'restaurer'],
+                'créer': ['anéantir', 'détruire', 'annihiler', 'abolir'],
+                'fonder': ['renverser', 'détruire', 'abolir', 'ruiner'],
+                'renverser': ['fonder', 'établir', 'ériger', 'édifier'],
+
+                // Lier et délier
+                'lier': ['délier', 'détacher', 'libérer', 'dénouer'],
+                'délier': ['lier', 'attacher', 'nouer', 'enchaîner'],
+                'attacher': ['détacher', 'délier', 'libérer', 'dégager'],
+                'détacher': ['attacher', 'lier', 'fixer', 'amarrer'],
+                'nouer': ['dénouer', 'délier', 'défaire', 'détacher'],
+                'dénouer': ['nouer', 'lier', 'attacher', 'entrelacer'],
+                'retenir': ['relâcher', 'lâcher', 'libérer', 'délivrer'],
+                'relâcher': ['retenir', 'maintenir', 'garder', 'tenir'],
+
+                // Nouveau et ancien
+                'nouveau': ['ancien', 'vieux', 'antique', 'archaïque'],
+                'ancien': ['nouveau', 'neuf', 'récent', 'moderne'],
+                'neuf': ['vieux', 'usé', 'ancien', 'vétuste'],
+                'vieux': ['neuf', 'nouveau', 'jeune', 'récent'],
+                'recommencer': ['finir', 'terminer', 'achever', 'conclure'],
+                'renaissance': ['mort', 'fin', 'déclin', 'vieillesse'],
+                'vieillesse': ['jeunesse', 'renaissance', 'renouveau'],
+                'innovation': ['tradition', 'conservation', 'habitude'],
+                'tradition': ['innovation', 'renouvellement', 'modernité']
+            };
+
+            let antonymes = antonymesMap[keyword] || [];
+
+            for (let [key, values] of Object.entries(antonymesMap)) {
+                if (values.includes(keyword)) {
+                    antonymes.push(key);
+                    antonymes = antonymes.concat(antonymesMap[key] || []);
+                }
+            }
+
+            return [...new Set(antonymes)];
+        }
+
+        // Ancienne fonction adaptée pour accepter directement le texte préparé
+        async function runAIAnalysis(candidateTexts, keyword = '', numCitations = 5) {
+
+            const prompt = `Tu es un expert en spiritualité chrétienne et musulmane, spécialisé dans l'identification des paradoxes mystiques.
+
+DÉFINITION D'UN PARADOXE SPIRITUEL :
+Un paradoxe spirituel présente une vérité qui défie la logique ordinaire, où deux réalités apparemment contradictoires coexistent ou se révèlent mutuellement. Ce n'est pas une simple juxtaposition d'antonymes, mais une tension dialectique où l'un révèle l'autre.
+
+CRITÈRE D'INTENSITÉ :
+Je ne veux PAS de phrases "plates" ou simplement explicatives. Je veux des fulgurances, des aphorismes, des phrases qui cognent.
+
+EXEMPLES DE VRAIS PARADOXES SPIRITUELS (CE QUE JE VEUX) :
+- "Mourir pour vivre"
+- "La nuit obscure illumine"
+- "Plus on possède Dieu, moins on Le possède"
+- "Être roi en devenant serviteur"
+- "Tout avoir en n'ayant rien"
+- "L'éloignement est proximité"
+- "L'ivresse par la sobriété"
+- "Rien n'existe que Lui, pourtant tout existe"
+
+CE QUE TU DOIS ABSOLUMENT REJETER (LE "BANAL") :
+1. Les explications théologiques ou dogmatiques "techniques" :
+   NON : "Le baptême ne fait pas seulement participer le baptisé à la mort et à la résurrection du Christ, mais au Christ Lui-même." (C'est une explication de fonctionnement, c'est trop pédagogique).
+   NON : "Mourir à la condition déchue et renaître à la condition de l’homme régénéré." (Trop descriptif/scolaire).
+
+2. Les simples contrastes temporels ou descriptifs :
+   NON : "Après la nuit vient le jour."
+   NON : "Il était triste puis il fut joyeux."
+
+3. Les phrases trop longues, molles ou diluées.
+
+PASSAGES À ANALYSER :
+${candidateTexts}
+
+TÂCHE : Sélectionne exactement ${numCitations} citations qui :
+1. Sont des APHORISMES percutants (courts et denses si possible).
+2. Contiennent un VRAI paradoxe mystique (tension interne forte).
+3. Sont compréhensibles sans contexte.
+${keyword ? `4. Privilégie (sans obligation) les citations contenant "${keyword}" si elles sont paradoxales.\n` : ''}
+
+Si tu ne trouves pas assez de "pépites", prends les meilleures disponibles, mais sois très sélectif.
+
+FORMAT DE RÉPONSE :
+- Une citation par ligne
+- Aucune numérotation, aucun commentaire, aucune explication
+- Phrases exactes extraites du texte
+
+Réponds maintenant avec les citations uniquement :`;
+
+            let attempts = 0;
+            currentModelIndex = 0;
+
+            while (attempts < MAX_ATTEMPTS_PER_BOOK && currentModelIndex < OPENROUTER_MODELS.length) {
+                const model = OPENROUTER_MODELS[currentModelIndex];
+
+                try {
+                    showMessage(`🤖 IA active - Modèle: ${model.split('/')[1].split(':')[0]}...`, 'loading');
+
+                    console.log('Envoi au proxy:', {
+                        model: model,
+                        message_length: prompt.length
+                    });
+
+                    const response = await callOpenRouterAPI(prompt, model);
+
+                    if (response && response.trim().length > 0) {
+                        // Parser la réponse
+                        const aiCitations = response
+                            .split('\n')
+                            .map(line => line.trim())
+                            .filter(line => line.length > 30)
+                            .slice(0, numCitations);
+
+                        if (aiCitations.length > 0) {
+                            showMessage(`✅ ${aiCitations.length} citation(s) sélectionnée(s) par l'IA`, 'info');
+                            return aiCitations.map((phrase, index) => ({
+                                phrase: phrase,
+                                score: 100 - index,
+                                position: 0,
+                                aiGenerated: true,
+                                modelUsed: model.split('/')[1]
+                            }));
+                        }
+                    }
+
+                    // Si pas de résultat valide, essayer le modèle suivant
+                    currentModelIndex++;
+                    if (currentModelIndex < OPENROUTER_MODELS.length) {
+                        await sleep(DELAY_BETWEEN_MODELS);
+                    }
+
+                } catch (error) {
+                    console.error(`Erreur avec ${model}:`, error);
+                    currentModelIndex++;
+
+                    if (currentModelIndex < OPENROUTER_MODELS.length) {
+                        await sleep(DELAY_AFTER_ERROR);
+                    }
+                }
+
+                attempts++;
+            }
+
+            // Si tous les modèles échouent
+            showMessage('⚠️ IA non disponible ou échec analyse', 'info');
+            return [];
+        }
+
+        // Wrapper pour compatibilité avec le mode fichier local unique
+        async function extractCitationsWithAI(text, keyword = '', numCitations = 5) {
+            showMessage('🤖 Mode IA activé - Analyse du texte...', 'loading');
+
+            // Extraction des candidats bruts
+            const candidates = extractCitations(text, keyword, numCitations * 8);
+
+            if (candidates.length === 0) {
+                return [];
+            }
+
+            // Préparation du texte
+            const candidateTexts = candidates.map(c => c.phrase).join('\n---\n');
+
+            // Appel à la fonction centrale d'analyse
+            const results = await runAIAnalysis(candidateTexts, keyword, numCitations);
+
+            // Fallback si l'IA échoue : on rend les candidats bruts
+            if (results.length === 0) {
+                return candidates.slice(0, numCitations);
+            }
+
+            return results;
+        }
+
+        async function callOpenRouterAPI(prompt, model) {
+            // Construction du payload au format standard OpenRouter (Chat Completions)
+            const payload = {
+                model: model,
+                messages: [
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 2000
+            };
+
+            console.log('Payload envoyé au proxy:', payload);
+
+            try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload),
+                    signal: AbortSignal.timeout(API_TIMEOUT)
+                });
+
+                console.log('Statut réponse:', response.status);
+
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Réponse non JSON reçue:', responseText);
+                    throw new Error(`Réponse invalide du serveur (${response.status})`);
+                }
+
+                if (!response.ok) {
+                    console.error('Erreur API reçue:', data);
+                    // Extraction du message d'erreur profond si disponible (format proxy HF)
+                    let detailedError = "Erreur inconnue";
+                    if (data.details) {
+                        try {
+                            const details = JSON.parse(data.details);
+                            detailedError = details.error?.message || detailedError;
+                        } catch (e) {
+                            detailedError = data.details;
+                        }
+                    } else if (data.error) {
+                        detailedError = typeof data.error === 'object' ? data.error.message : data.error;
+                    }
+                    throw new Error(`OpenRouter API error: ${detailedError}`);
+                }
+
+                console.log('Données reçues:', data);
+
+                // Le proxy HuggingFace peut retourner directement le texte ou le format standard
+                if (data.response) {
+                    return data.response;
+                }
+
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    return data.choices[0].message.content;
+                }
+
+                if (data.output && data.output.choices) {
+                    return data.output.choices[0].message.content;
+                }
+
+                throw new Error('Format de réponse AI non reconnu');
+
+            } catch (error) {
+                if (error.name === 'TimeoutError') {
+                    throw new Error('Délai d\'attente dépassé (timeout)');
+                }
+                throw error;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function displayCitations(citations, useAI = false) {
+            citationsContainer.innerHTML = '';
+            messageContainer.innerHTML = '';
+
+            if (citations.length === 0) {
+                return;
+            }
+
+            const keyword = keywordInput.value.trim();
+            let message = `${citations.length} citation(s) trouvée(s)`;
+            if (keyword) {
+                message += ` avec paradoxe sur "${keyword}"`;
+            }
+            if (useAI) {
+                message += ' (sélection IA)';
+            }
+            showMessage(message, 'info');
+
+            citations.forEach((item, index) => {
+                const citationDiv = document.createElement('div');
+                citationDiv.className = 'citation';
+                citationDiv.style.animationDelay = `${index * 0.1}s`;
+
+                let pageNumber = '?';
+                if (pageIndex.length > 0 && item.position) {
+                    for (let page of pageIndex) {
+                        if (item.position >= page.startChar && item.position <= page.endChar) {
+                            pageNumber = page.pageNumber;
+                            break;
+                        }
+                    }
+                }
+
+                const aiBadge = item.aiGenerated ? `<span class="ai-badge">IA: ${item.modelUsed || 'AI'}</span>` : '';
+
+                citationDiv.innerHTML = `
+                    <div class="citation-text">"${item.phrase}"</div>
+                    <div class="citation-context">
+                        Citation ${index + 1}/${citations.length} ${aiBadge}
+                        ${!item.aiGenerated ? `| Score: ${item.score} points` : ''}
+                        ${pageIndex.length > 0 && pageNumber !== '?' ? ` | Page ${pageNumber}` : ''}
+                    </div>
+                `;
+
+                citationsContainer.appendChild(citationDiv);
+            });
+        }
+
+        function showMessage(text, type) {
+            messageContainer.innerHTML = `<div class="${type}">${text}</div>`;
+        }
+    </script>
+</body>
+
+</html>
